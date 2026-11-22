@@ -71,3 +71,18 @@ h2{font-family:"Marcellus",serif;font-weight:400}
 .foot .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
 .foot a{text-decoration:none;border-bottom:1px solid var(--rule)}
 @media (max-width:560px){header nav{gap:14px;font-size:14px}.mark span{font-size:14px;letter-spacing:.03em}body{font-size:16px}header nav .ar-part{display:none}}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:34px 0 10px}
+@media (max-width:860px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{display:flex;flex-direction:column;gap:2px;padding:18px 20px;border:1px solid var(--rule);border-radius:6px;background:var(--wall);text-decoration:none;color:var(--ink);transition:border-color .2s,transform .2s}
+.tile:hover{border-color:var(--brass);transform:translateY(-2px)}
+.t-en{font-family:"Marcellus",serif;font-size:22px;line-height:1.2}
+.t-ar{font-family:"Reem Kufi",sans-serif;color:var(--brass);font-size:16px}
+.t-n{font-size:13px;color:var(--ink-2);margin-top:6px}
+.topic{scroll-margin-top:80px}
+.sec-intro{color:var(--ink-2);margin:-4px 0 22px;max-width:70ch}
+h3.sub{font-family:"Readex Pro",sans-serif;font-weight:500;font-size:18px;color:var(--lapis);margin:30px 0 14px;display:flex;gap:8px;align-items:baseline}
+h3.sub span{font-family:"Reem Kufi",sans-serif;font-weight:600;color:var(--brass);font-size:15px}
+h3.sub small{font-weight:300;color:var(--ink-2);font-size:13px;margin-inline-start:auto}
+.soon{color:var(--ink-2);font-style:italic}
+.li-link{font-size:15px;margin:0}
+.li-link a{color:var(--lapis);text-decoration:none;border-bottom:1px solid var(--brass)}

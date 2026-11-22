@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Center Cooling: ΔT Decides How Much Air You Need | Mohammad Baker</title>
+<meta name="description" content="I&#x27;m sharing this for anyone who works with HVAC, or anyone curious about how data centers are cooled.">
+<meta name="author" content="Mohammad Yacoub Baker">
+<link rel="canonical" href="https://mbakermep.com/articles/data-center-delta-t.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Data Center Cooling: ΔT Decides How Much Air You Need">
+<meta property="og:description" content="I&#x27;m sharing this for anyone who works with HVAC, or anyone curious about how data centers are cooled.">
+<meta property="og:url" content="https://mbakermep.com/articles/data-center-delta-t.html">
+<meta property="og:image" content="https://mbakermep.com/articles/img/x-dc.webp">
+<meta property="og:site_name" content="Mohammad Baker">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#1F3A63">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Reem+Kufi:wght@600&family=Readex+Pro:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/articles/articles.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "Data Center Cooling: ΔT Decides How Much Air You Need", "description": "I'm sharing this for anyone who works with HVAC, or anyone curious about how data centers are cooled.", "inLanguage": "en", "author": {"@type": "Person", "@id": "https://mbakermep.com/#person", "name": "Mohammad Yacoub Baker", "url": "https://mbakermep.com/"}, "publisher": {"@type": "Person", "@id": "https://mbakermep.com/#person", "name": "Mohammad Yacoub Baker", "url": "https://mbakermep.com/"}, "image": "https://mbakermep.com/articles/img/x-dc.webp", "mainEntityOfPage": "https://mbakermep.com/articles/data-center-delta-t.html"}</script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="mark" href="/"><svg viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="22" height="22"/><rect x="9" y="9" width="22" height="22" transform="rotate(45 20 20)"/><circle cx="20" cy="20" r="4.2"/></g></svg><span>MOHAMMAD BAKER</span></a>
+  <nav><a href="/articles/">Articles<span class="ar-part"> · المقالات</span></a><a href="/#request" class="cta">Contact</a></nav>
+</div></header>
+<main class="wrap article">
+  <p class="crumb"><a href="/articles/">Articles</a> / <a href="/articles/#datacenters">Data centers</a></p>
+  <p class="kicker">Data centers</p>
+  <h1>Data Center Cooling: ΔT Decides How Much Air You Need</h1>
+  <p class="byline">Eng. Mohammad Yacoub Baker · Design notes</p>
+  <div class="grid">
+    <article class="body">
+<p>I'm sharing this for anyone who works with HVAC, or anyone curious about how data centers are cooled.</p>
+<p>Servers turn almost all the electricity they use into heat. Air carries that heat away, and the airflow needed comes from one simple equation:</p>
+<p>V = Q / (1.2 × ΔT)</p>
+<ul><li>V = airflow (m³/s)</li><li>Q = heat load (kW)</li><li>ΔT = effective air-side temperature difference (K)</li></ul>
+<p>Example: one rack using 10 kW</p>
+<p>At ΔT = 12 K:<br>V = 10 / (1.2 × 12) = 0.69 m³/s ≈ 2,500 m³/h</p>
+<p>At ΔT = 8 K:<br>V = 10 / (1.2 × 8) = 1.04 m³/s</p>
+<p>The heat is the same, but the required airflow is 50% higher.</p>
+<p>Two different ΔTs to keep in mind:<br>ΔT across the servers is set mainly by the IT equipment and its fans.<br>ΔT across the cooling unit (supply to return) is what bypass affects. When cold air bypasses the servers and returns unused, the return gets cooler, the unit's ΔT drops, and fan energy use can rise.</p>
+<p>The lesson: keep hot air and cold air apart. Aisle containment, blanking panels and sealed cable openings help keep the cooling unit's ΔT high.</p>
+<p>One small note: the 1.2 factor assumes air at sea level. In high cities such as Amman, the air is lighter, so the factor needs a small correction.</p>
+<p> Example 1-1 from Mechanical Design of Data Centers</p>
+      <p class="note">These notes are for design discussion. Check them against the codes, data and conditions of your own project.</p>
+    </article>
+    <aside class="figs"><figure><a href="img/x-dc.webp" target="_blank" rel="noopener"><img src="img/x-dc.webp" width="1100" height="1556" alt="Data Center Cooling: ΔT Decides How Much Air You Need"></a></figure>
+    <p class="li-link"><a href="https://www.linkedin.com/in/mohammad-baker-mep/recent-activity/all/" target="_blank" rel="noopener">Original post on LinkedIn →</a></p></aside>
+  </div>
+  <nav class="pager"><span></span><a class="all" href="/articles/">All articles</a><span></span></nav>
+</main>
+<footer class="foot"><div class="wrap">
+  <span>© 2026 Eng. Mohammad Yacoub Baker · م. محمد يعقوب بكر</span>
+  <span><a href="/">mbakermep.com</a> · <a href="https://www.linkedin.com/in/mohammad-baker-mep" rel="me noopener" target="_blank">LinkedIn</a></span>
+</div></footer>
+</body>
+</html>
