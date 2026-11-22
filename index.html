@@ -147,6 +147,16 @@ html[data-lang="ar"] .hero .alt{font-family:var(--display-en);letter-spacing:.04
 .disciplines{display:flex;flex-wrap:wrap;gap:4px 0;margin:0 0 34px;padding:0;list-style:none;font-size:15px;font-weight:400}
 .disciplines li{display:flex;align-items:center}
 .disciplines li+li::before{content:"";width:7px;height:7px;background:var(--brass);transform:rotate(45deg);margin:0 14px}
+.arts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.art{display:flex;flex-direction:column;background:var(--wall);border:1px solid var(--rule);border-radius:6px;overflow:hidden;text-decoration:none;color:var(--ink);transition:transform .2s}
+.art:hover{transform:translateY(-3px)}
+.art .th{aspect-ratio:16/10;overflow:hidden;background:#fff;border-bottom:1px solid var(--rule)}
+.art .th img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.art .tx{padding:14px 16px 18px}
+.art .k{font-size:13px;color:var(--brass)}
+.art h3{font-family:var(--display-en);font-weight:400;font-size:20px;line-height:1.3;margin:6px 0 0}
+.arts-more{margin-top:26px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+@media (max-width:900px){.arts{grid-template-columns:minmax(0,1fr)}.arts .art:nth-child(n+3){display:none}}
 .actions{display:flex;gap:14px;flex-wrap:wrap}
 .docs{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
 .docs a{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 20px;border:1px solid var(--brass);border-radius:999px;color:var(--brass);text-decoration:none;font-size:15px;transition:background .2s,color .2s}
@@ -377,6 +387,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
       <a href="#services"><span class="en">Services</span><span class="ar">الخدمات</span></a>
       <a href="#projects"><span class="en">Projects</span><span class="ar">المشاريع</span></a>
       <a href="#books"><span class="en">Books</span><span class="ar">الكتب</span></a>
+      <a href="/articles/"><span class="en">Articles</span><span class="ar">المقالات</span></a>
       <a href="#training"><span class="en">Courses</span><span class="ar">الدورات</span></a>
       <a href="#request" class="cta"><span class="en">Get in touch</span><span class="ar">تواصل معي</span></a>
       <button class="lang" id="langBtn" type="button" aria-label="Switch language"><span class="en">العربية</span><span class="ar">English</span></button>
@@ -597,9 +608,17 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
   </div>
 </section>
 
+<section class="room" id="articles" aria-labelledby="h-arts">
+  <div class="wrap">
+    <div class="room-head"><span class="num" aria-hidden="true"><span class="en">06</span><span class="ar">٦</span></span><div><h2 id="h-arts"><span class="en">Articles</span><span class="ar">المقالات</span></h2><p class="en">Fire protection cases: short design notes from real projects, each checked against the code. 28 so far.</p><p class="ar">حالات في أنظمة الحريق: ملاحظات تصميم قصيرة من مشاريع حقيقية، كل واحدة مرجعها الكود. ٢٨ حالة حتى الآن (باللغة الإنجليزية).</p></div></div>
+    <div class="arts"><a class="art" href="/articles/case-28.html" lang="en" dir="ltr"><div class="th"><img src="/articles/img/case-28-1.webp" alt="" loading="lazy" width="1100" height="748"></div><div class="tx"><span class="k">Case #28</span><h3>ESFR: Area, Spacing and the 12-Sprinkler Rule</h3></div></a><a class="art" href="/articles/case-27.html" lang="en" dir="ltr"><div class="th"><img src="/articles/img/case-27-1.webp" alt="" loading="lazy" width="1100" height="728"></div><div class="tx"><span class="k">Case #27</span><h3>Dry Sprinkler or Dry System?</h3></div></a><a class="art" href="/articles/case-26.html" lang="en" dir="ltr"><div class="th"><img src="/articles/img/case-26-1.webp" alt="" loading="lazy" width="1100" height="961"></div><div class="tx"><span class="k">Case #26</span><h3>&quot;Smaller and Cheaper&quot;: Why a Value-Engineered Suction Pipe Gets Rejected Twice</h3></div></a></div>
+    <div class="arts-more"><a class="btn solid" href="/articles/"><span class="en">All 28 fire cases</span><span class="ar">كل حالات الحريق (٢٨)</span></a></div>
+  </div>
+</section>
+
 <section class="room courses" id="training" aria-labelledby="h-train">
   <div class="wrap">
-    <div class="room-head"><span class="num" aria-hidden="true"><span class="en">06</span><span class="ar">٦</span></span><div><h2 id="h-train"><span class="en">Courses</span><span class="ar">الدورات</span></h2><p class="en">Taught from real project drawings. Register and you will be contacted with the dates of the next round.</p><p class="ar">تُدرَّس من مخططات مشاريع حقيقية. سجّل، وسيتم التواصل معك بمواعيد الدفعة القادمة.</p></div></div>
+    <div class="room-head"><span class="num" aria-hidden="true"><span class="en">07</span><span class="ar">٧</span></span><div><h2 id="h-train"><span class="en">Courses</span><span class="ar">الدورات</span></h2><p class="en">Taught from real project drawings. Register and you will be contacted with the dates of the next round.</p><p class="ar">تُدرَّس من مخططات مشاريع حقيقية. سجّل، وسيتم التواصل معك بمواعيد الدفعة القادمة.</p></div></div>
     <div class="course-wrap">
       <div class="course-col">
       <article class="course">
@@ -669,7 +688,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
 
 <section class="room request" id="request" aria-labelledby="h-req">
   <div class="wrap">
-    <div class="room-head"><span class="num" aria-hidden="true"><span class="en">07</span><span class="ar">٧</span></span><div><h2 id="h-req"><span class="en">Get in touch</span><span class="ar">تواصل معي</span></h2><p class="en">Choose the type of request and add a few details. You will get a reply within 48 hours.</p><p class="ar">اختر نوع الطلب وأضف بعض التفاصيل، ويصلك الرد خلال 48 ساعة.</p></div></div>
+    <div class="room-head"><span class="num" aria-hidden="true"><span class="en">08</span><span class="ar">٨</span></span><div><h2 id="h-req"><span class="en">Get in touch</span><span class="ar">تواصل معي</span></h2><p class="en">Choose the type of request and add a few details. You will get a reply within 48 hours.</p><p class="ar">اختر نوع الطلب وأضف بعض التفاصيل، ويصلك الرد خلال 48 ساعة.</p></div></div>
     <div class="doors" role="group" aria-label="Request type">
       <button type="button" class="door" data-door="owner" aria-pressed="true"><svg viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 34V14l12-7 12 7v20"/><path d="M4 34h32M16 34v-9h8v9M14 17h4M22 17h4"/></g></svg><span><b class="en">Project follow-up for the owner</b><b class="ar">متابعة مشروع لصالح المالك</b><small class="en">Mechanical oversight of your project on your side</small><small class="ar">إشراف ميكانيكي على مشروعك لصالحك</small></span></button>
       <button type="button" class="door" data-door="book" aria-pressed="false"><svg viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 10c-4-3-9-3-14-2v24c5-1 10-1 14 2 4-3 9-3 14-2V8c-5-1-10-1-14 2z"/><path d="M20 10v24"/></g></svg><span><b class="en">Buy the book</b><b class="ar">شراء الكتاب</b><small class="en">The interactive edition, for you or your team</small><small class="ar">النسخة التفاعلية، لك أو لفريقك</small></span></button>

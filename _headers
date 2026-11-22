@@ -13,3 +13,6 @@
 
 /files/*
   Cache-Control: public, max-age=86400
+
+/articles/img/*
+  Cache-Control: public, max-age=2592000
