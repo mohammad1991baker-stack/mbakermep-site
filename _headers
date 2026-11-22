@@ -10,3 +10,6 @@
 /read/*
   Cache-Control: public, max-age=2592000
   X-Robots-Tag: noindex
+
+/files/*
+  Cache-Control: public, max-age=86400
