@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-lang="ar">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>قارئ الكتب · Book reader — Mohammad Yacoub Baker</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#1F3A63">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@600&family=Readex+Pro:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#2A2F3B;--bar:#1F3A63;--ink:#F4EEE2;--brass:#C99A45;--muted:#C3C6D0}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Readex Pro",system-ui,sans-serif;font-weight:300}
+html[data-lang="en"] .ar,html[data-lang="ar"] .en{display:none!important}
+header{position:sticky;top:0;z-index:5;background:var(--bar);border-bottom:1px solid rgba(201,154,69,.35)}
+.bar{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;padding:10px 18px}
+.back{color:var(--ink);text-decoration:none;font-size:14px;display:flex;align-items:center;gap:8px;min-height:40px}
+.back svg{width:26px;height:26px;color:var(--brass);flex:none}
+.title{flex:1 1 240px;font-family:"Reem Kufi","Readex Pro",sans-serif;font-weight:600;font-size:17px;line-height:1.35;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-lang="en"] .title{font-family:"Readex Pro",sans-serif;font-weight:500}
+.ctrl{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.ctrl input{width:64px;font:inherit;font-size:14px;color:var(--ink);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:4px;padding:6px 8px;text-align:center;direction:ltr}
+button{font:inherit;font-size:14px;color:var(--ink);background:none;border:1px solid rgba(201,154,69,.6);border-radius:999px;min-height:38px;min-width:38px;padding:0 12px;cursor:pointer}
+button:hover{background:rgba(201,154,69,.18)}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.pages{max-width:var(--w,900px);margin:24px auto 80px;padding:0 12px;display:flex;flex-direction:column;gap:14px}
+.pg{position:relative;scroll-margin-top:72px;width:100%;aspect-ratio:910/1287;background:#fff;box-shadow:0 10px 24px -12px rgba(0,0,0,.55);overflow:hidden}
+.pg img{display:block;width:100%;height:100%;object-fit:contain;-webkit-user-drag:none;user-select:none;-webkit-user-select:none;pointer-events:none}
+.pg::after{content:"";position:absolute;inset:0}
+.msg{max-width:640px;margin:80px auto;text-align:center;padding:0 20px;color:var(--muted)}
+.msg a{color:var(--brass)}
+.toc{position:fixed;top:61px;inset-inline-end:0;bottom:0;width:min(380px,100%);background:#1B2232;border-inline-start:1px solid rgba(201,154,69,.35);overflow:auto;z-index:6;padding:12px 0 40px}
+.toc ol{list-style:none;margin:0;padding:0}
+.toc a{display:flex;justify-content:space-between;gap:12px;padding:8px 18px;color:var(--ink);text-decoration:none;font-size:14px;line-height:1.5}
+.toc a:hover,.toc a:focus-visible{background:rgba(201,154,69,.15)}
+.toc .lv0 a{color:var(--brass);font-weight:500;margin-top:8px}
+.toc .lv1 a{padding-inline-start:30px;color:var(--muted)}
+.toc small{color:var(--muted);direction:ltr;flex:none}
+.resume{max-width:900px;margin:16px auto 0;padding:10px 16px;background:rgba(201,154,69,.15);border:1px solid rgba(201,154,69,.5);border-radius:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px}
+.resume[hidden]{display:none}
+@media print{body{display:none}}
+</style>
+</head>
+<body oncontextmenu="return false">
+<header>
+  <div class="bar">
+    <a class="back" href="/#books"><svg viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="22" height="22"/><rect x="9" y="9" width="22" height="22" transform="rotate(45 20 20)"/><circle cx="20" cy="20" r="4.2"/></g></svg><span class="ar">الرجوع للموقع</span><span class="en">Back to the site</span></a>
+    <div class="title" id="bookTitle"></div>
+    <div class="ctrl">
+      <label for="pageIn"><span class="ar">صفحة</span><span class="en">Page</span></label>
+      <input id="pageIn" type="number" min="1" inputmode="numeric">
+      <span>/ <span id="total"></span></span>
+      <button type="button" id="tocBtn" aria-expanded="false" aria-controls="toc"><span class="ar">الفهرس</span><span class="en">Contents</span></button>
+      <button type="button" id="zoomOut" aria-label="Smaller">−</button>
+      <button type="button" id="zoomIn" aria-label="Larger">+</button>
+    </div>
+  </div>
+</header>
+<nav class="toc" id="toc" hidden aria-label="Contents"><ol id="tocList"></ol></nav>
+<p class="resume" id="resume" hidden><span class="ar">تابع من حيث توقفت — صفحة </span><span class="en">Continue where you stopped — page </span><b id="resumeN"></b> <button type="button" id="resumeGo"><span class="ar">تابع</span><span class="en">Continue</span></button> <button type="button" id="resumeX" aria-label="Close">×</button></p>
+<main class="pages" id="pages" aria-live="off"></main>
+<div class="msg" id="msg" hidden><p class="ar">الكتاب غير موجود. <a href="/#books">ارجع لقسم الكتب</a></p><p class="en">Book not found. <a href="/#books">Back to the books</a></p></div>
+<script>
+(function(){
+  var TOC={"ar": [[0, "المحتويات", 5], [0, "الجزء الأول: الأساسيات وطفايات الحريق", 14], [1, "الفصل 1: مدخل إلى الحماية من الحريق والأكواد", 15], [1, "الفصل 2: علم الحريق وفئات الحريق", 31], [1, "الفصل 3: طفايات الحريق المحمولة", 47], [0, "الجزء الثاني: المرشات التلقائية: من التصميم إلى الأنظمة", 67], [1, "الفصل 4: المرش التلقائي", 68], [1, "الفصل 5: تصنيف الخطورة ومعايير التصميم", 87], [1, "الفصل 6: توزيع المرشات", 102], [1, "الفصل 7: المواسير والحسابات الهيدروليكية", 122], [1, "الفصل 8: أنظمة المرشات: الصورة الكاملة", 143], [1, "الفصل 9: النظام الرطب", 154], [1, "الفصل 10: النظام الجاف", 166], [1, "الفصل 11: نظام التشغيل المسبق", 183], [1, "الفصل 12: نظام الغمر ورش الماء", 196], [1, "الفصل 13: حماية التخزين", 212], [0, "الجزء الثالث: مصادر المياه وشبكات التغذية", 233], [1, "الفصل 14: مصادر المياه ومضخات الحريق والخزانات", 234], [1, "الفصل 15: أنظمة الأنابيب القائمة وخزائن الحريق", 260], [1, "الفصل 16: الحنفيات وشبكات الحريق الخارجية", 283], [0, "الجزء الرابع: أنظمة الإطفاء الخاصة", 303], [1, "الفصل 17: أنظمة الرغوة", 304], [1, "الفصل 18: أنظمة العوامل النظيفة", 332], [1, "الفصل 19: أنظمة ثاني أكسيد الكربون", 361], [1, "الفصل 20: أنظمة الرغوة-الماء وضباب الماء", 387], [1, "الفصل 21: حماية المطابخ التجارية", 415], [0, "الجزء الخامس: الكشف والإنذار والتحكم بالدخان", 443], [1, "الفصل 22: الكشف والإنذار من منظور مهندس الميكانيك", 444], [1, "الفصل 23: التحكم بالدخان", 466], [1, "الفصل 24: تكامل أنظمة مكافحة الحريق", 498], [0, "الجزء السادس: من التصميم إلى التسليم", 525], [1, "الفصل 25: مشروع تصميم متكامل لمبنى", 526], [1, "الفصل 26: الحالات الخاصة في التصميم", 554], [1, "الفصل 27: المخططات والمواصفات والكميات ومراجعة الجهة المختصة", 585], [1, "الفصل 28: التركيب والاستلام والتشغيل التجريبي", 619], [1, "الملحق أ: الوحدات والتحويلات والمعادلات", 645], [1, "الملحق ب: مسرد المصطلحات والمرادفات", 647], [1, "الملحق ج: خريطة الأكواد والطبعات المستخدمة", 655], [1, "الملحق د: الربط مع الكود السعودي والمواصفات البريطانية والأوروبية", 657], [1, "ملحق الإجابات", 660], [1, "الفهرس الموضوعي", 683], [1, "نبذة عن المؤلف", 694]], "en": [[0, "Preface", 3], [0, "Contents", 4], [0, "Part One: Fundamentals & Portable Extinguishers", 12], [1, "Chapter 1: Introduction to Fire Protection & Codes", 12], [1, "Chapter 2: Fire Science & Fire Classes", 29], [1, "Chapter 3: Portable Fire Extinguishers", 46], [0, "Part Two: Automatic Sprinkler Systems", 69], [1, "Chapter 4: The Automatic Sprinkler", 69], [1, "Chapter 5: Hazard Classification & Design Criteria", 90], [1, "Chapter 6: Sprinkler Layout & Spacing", 107], [1, "Chapter 7: Piping & Hydraulic Calculations — A to Z", 129], [1, "Chapter 8: Sprinkler Systems — Overview, Components & Types", 151], [1, "Chapter 9: Wet Pipe Sprinkler Systems — A to Z", 164], [1, "Chapter 10: Dry Pipe Sprinkler Systems — A to Z", 177], [1, "Chapter 11: Preaction Sprinkler Systems — A to Z", 195], [1, "Chapter 12: Deluge & Water Spray Systems — A to Z", 209], [1, "Chapter 13: Storage Protection — A to Z", 227], [0, "Part Three: Water Supplies, Standpipes & Hydrants", 251], [1, "Chapter 14: Water Supplies, Fire Pumps & Tanks — A to Z", 251], [1, "Chapter 15: Standpipe Systems & Fire Hose Cabinets — A to Z", 280], [1, "Chapter 16: Hydrants & Private Fire Service Mains — A to Z", 305], [0, "Part Four: Special Extinguishing Systems", 327], [1, "Chapter 17: Low-, Medium- & High-Expansion Foam Systems — A to Z", 327], [1, "Chapter 18: Clean Agent Fire Extinguishing Systems — A to Z (NFPA 2001)", 360], [1, "Chapter 19: Carbon Dioxide Extinguishing Systems — A to Z", 394], [1, "Chapter 20: Foam-Water and Water Mist Systems", 423], [1, "Chapter 21: Commercial Kitchen Protection", 455], [0, "Part Five: Detection, Alarm & Smoke Control", 489], [1, "Chapter 22: Fire Detection and Alarm — The Mechanical Engineer’s View (NFPA 72)", 489], [1, "Chapter 23: Smoke Control Systems — A to Z (NFPA 92)", 511], [1, "Chapter 24: Fire Protection Systems Integration", 549], [0, "Part Six: From Design to Handover", 582], [1, "Chapter 25: Integrated Building Design Project", 582], [1, "Chapter 26: Special Design Cases", 614], [1, "Chapter 27: Drawings, Specifications, Quantities and AHJ Plan Review", 648], [1, "Chapter 28: Installation, Acceptance Testing & Commissioning", 681], [0, "Appendices", 710], [1, "Appendix A — Units & Conversions", 710], [1, "Appendix B — Glossary (English–Arabic)", 712], [1, "Appendix C — Codes & Editions Used", 718], [1, "Appendix D — Regional Codes Mapping (SBC / BS / EN)", 719], [1, "About the Author", 723]]};
+  var BOOKS={
+    ar:{n:694,dir:'rtl',ui:'ar',title:'أنظمة مكافحة الحريق — كتاب الطالب'},
+    en:{n:723,dir:'ltr',ui:'en',title:'Fire Fighting Systems — Student Book'}
+  };
+  var root=document.documentElement;
+  var q=new URLSearchParams(location.search),id=q.get('b');
+  var b=BOOKS[id];
+  if(!b){document.getElementById('msg').hidden=false;return}
+  var ui=q.get('ui')==='en'||q.get('ui')==='ar'?q.get('ui'):b.ui;
+  root.setAttribute('data-lang',ui);root.lang=ui;root.dir=ui==='ar'?'rtl':'ltr';
+  document.title=b.title+' — Mohammad Yacoub Baker';
+  var t=document.getElementById('bookTitle');t.textContent=b.title;t.dir=b.dir;
+  document.getElementById('total').textContent=b.n;
+  var pageIn=document.getElementById('pageIn');pageIn.max=b.n;pageIn.value=1;
+  var box=document.getElementById('pages'),frames=[];
+  for(var i=1;i<=b.n;i++){
+    var d=document.createElement('div');d.className='pg';d.id='p'+i;d.dataset.src='/read/'+id+'/'+String(i).padStart(3,'0')+'.webp';d.setAttribute('aria-label','Page '+i);
+    box.appendChild(d);frames.push(d);
+  }
+  function load(d){if(d.dataset.done)return;d.dataset.done=1;var im=new Image();im.alt='';im.decoding='async';im.draggable=false;im.src=d.dataset.src;d.appendChild(im)}
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){load(e.target);var n=+e.target.id.slice(1);if(n+1<=b.n)load(frames[n]);}})},{rootMargin:'1200px 0px'});
+  frames.forEach(function(d){io.observe(d)});
+  var cur=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting&&document.activeElement!==pageIn){pageIn.value=e.target.id.slice(1)}})},{rootMargin:'-45% 0px -45% 0px'});
+  frames.forEach(function(d){cur.observe(d)});
+  function go(n){n=Math.max(1,Math.min(b.n,parseInt(n,10)||1));frames[n-1].scrollIntoView({block:'start'});pageIn.value=n}
+  pageIn.addEventListener('change',function(){go(pageIn.value)});
+  pageIn.addEventListener('keydown',function(e){if(e.key==='Enter'){go(pageIn.value);pageIn.blur()}});
+  var w=900;try{w=+localStorage.getItem('reader-w')||900}catch(e){}
+  function setW(v){var n=+pageIn.value;w=Math.max(500,Math.min(1400,v));box.style.setProperty('--w',w+'px');try{localStorage.setItem('reader-w',w)}catch(e){}if(n)frames[n-1].scrollIntoView({block:'start'})}
+  box.style.setProperty('--w',w+'px');
+  document.getElementById('zoomIn').onclick=function(){setW(w+150)};
+  document.getElementById('zoomOut').onclick=function(){setW(w-150)};
+  var tocList=document.getElementById('tocList'),toc=document.getElementById('toc'),tocBtn=document.getElementById('tocBtn');
+  (TOC[id]||[]).forEach(function(e){var li=document.createElement('li');li.className='lv'+e[0];var a=document.createElement('a');a.href='#'+e[2];var s=document.createElement('span');s.textContent=e[1];var n=document.createElement('small');n.textContent=e[2];a.appendChild(s);a.appendChild(n);a.dir=b.dir;a.addEventListener('click',function(ev){ev.preventDefault();go(e[2]);toc.hidden=true;tocBtn.setAttribute('aria-expanded','false')});li.appendChild(a);tocList.appendChild(li)});
+  tocBtn.addEventListener('click',function(){toc.hidden=!toc.hidden;tocBtn.setAttribute('aria-expanded',String(!toc.hidden))});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!toc.hidden){toc.hidden=true;tocBtn.setAttribute('aria-expanded','false')}});
+  var KEY='reader-pos-'+id,last=0;try{last=+localStorage.getItem(KEY)||0}catch(e){}
+  var timer;
+  var posObs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){var n=+e.target.id.slice(1);clearTimeout(timer);timer=setTimeout(function(){try{localStorage.setItem(KEY,n)}catch(x){}},800)}})},{rootMargin:'-45% 0px -45% 0px'});
+  frames.forEach(function(d){posObs.observe(d)});
+  var start=parseInt(location.hash.slice(1),10);
+  if(start>1)setTimeout(function(){go(start)},50);
+  else if(last>3){document.getElementById('resumeN').textContent=last;var rb=document.getElementById('resume');rb.hidden=false;document.getElementById('resumeGo').onclick=function(){rb.hidden=true;go(last)};document.getElementById('resumeX').onclick=function(){rb.hidden=true}}
+  document.addEventListener('keydown',function(e){var k=(e.key||'').toLowerCase();if((e.ctrlKey||e.metaKey)&&(k==='s'||k==='p')){e.preventDefault()}});
+  document.addEventListener('dragstart',function(e){e.preventDefault()});
+})();
+</script>
+</body>
+</html>
