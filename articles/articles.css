@@ -22,11 +22,11 @@ h2{font-family:"Marcellus",serif;font-weight:400}
 /* hub */
 .hub{padding:56px 0 80px}
 .intro{max-width:62ch;color:var(--ink-2);margin:0 0 6px}
-.intro.ar{font-family:"Readex Pro",sans-serif;text-align:right;margin-inline:auto 0;margin-top:4px}
-@media (max-width:860px){.intro.ar{margin-inline:0;text-align:right}}
+
+
 .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;border-bottom:1px solid var(--rule);margin:52px 0 18px;padding-bottom:10px}
 .sec-head h2{font-size:clamp(28px,3.4vw,40px);margin:0}
-.sec-head h2 span{font-family:"Reem Kufi",sans-serif;font-size:.7em;color:var(--brass)}
+
 .count{color:var(--ink-2);font-size:15px}
 .filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 26px}
 .filters button{font:inherit;font-size:14px;padding:6px 16px;border-radius:999px;border:1px solid var(--rule);background:transparent;color:var(--ink-2);cursor:pointer;min-height:38px}
@@ -81,8 +81,18 @@ h2{font-family:"Marcellus",serif;font-weight:400}
 .topic{scroll-margin-top:80px}
 .sec-intro{color:var(--ink-2);margin:-4px 0 22px;max-width:70ch}
 h3.sub{font-family:"Readex Pro",sans-serif;font-weight:500;font-size:18px;color:var(--lapis);margin:30px 0 14px;display:flex;gap:8px;align-items:baseline}
-h3.sub span{font-family:"Reem Kufi",sans-serif;font-weight:600;color:var(--brass);font-size:15px}
+h3.sub .ar{font-family:"Reem Kufi",sans-serif;font-weight:600}
 h3.sub small{font-weight:300;color:var(--ink-2);font-size:13px;margin-inline-start:auto}
 .soon{color:var(--ink-2);font-style:italic}
 .li-link{font-size:15px;margin:0}
 .li-link a{color:var(--lapis);text-decoration:none;border-bottom:1px solid var(--brass)}
+html[data-lang="en"] .ar{display:none!important}
+html[data-lang="ar"] .en{display:none!important}
+html[data-lang="ar"] body{font-family:"Readex Pro",system-ui,sans-serif}
+html[data-lang="ar"] .kicker,html[data-lang="ar"] .t-en,html[data-lang="ar"] .sec-head h2,html[data-lang="ar"] .hub h1{font-family:"Reem Kufi","Readex Pro",sans-serif;letter-spacing:0}
+html[data-lang="ar"] .mark span{font-family:"Reem Kufi",sans-serif;letter-spacing:0}
+html[data-lang="ar"] .card .txt{text-align:right}
+html[data-lang="ar"] .card .txt h3,html[data-lang="ar"] .card .txt p{text-align:left}
+button.lang{font:inherit;font-size:14px;padding:6px 14px;border:1px solid var(--brass);border-radius:999px;background:transparent;color:var(--brass);cursor:pointer;min-height:36px}
+.t-n{display:block}
+h3.sub small{margin-inline-start:auto}
