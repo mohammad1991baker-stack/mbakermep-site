@@ -148,9 +148,10 @@ html[data-lang="ar"] .hero .alt{font-family:var(--display-en);letter-spacing:.04
 .disciplines li{display:flex;align-items:center}
 .disciplines li+li::before{content:"";width:7px;height:7px;background:var(--brass);transform:rotate(45deg);margin:0 14px}
 .actions{display:flex;gap:14px;flex-wrap:wrap}
-.docs{display:flex;gap:22px;flex-wrap:wrap;margin-top:20px;font-size:15px}
-.docs a{color:var(--ink-2);text-decoration:none;border-bottom:1px solid var(--brass);padding-bottom:2px}
-.docs a:hover{color:var(--brass)}
+.docs{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+.docs a{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 20px;border:1px solid var(--brass);border-radius:999px;color:var(--brass);text-decoration:none;font-size:15px;transition:background .2s,color .2s}
+.docs a:hover{background:var(--brass);color:#fff}
+.docs svg{width:16px;height:16px;flex:none}
 .btn{display:inline-flex;align-items:center;min-height:50px;padding:0 26px;text-decoration:none;font-weight:400;font-size:16px;border:1px solid var(--ink);border-radius:999px;transition:background .2s,color .2s}
 .btn.solid{background:var(--lapis);border-color:var(--lapis);color:#F4EEE2}
 .btn.solid:hover{background:var(--ink);border-color:var(--ink);color:var(--stone)}
@@ -403,8 +404,8 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
         <a class="btn line" href="#books"><span class="en">Books &amp; publications</span><span class="ar">الكتب والمؤلفات</span></a>
       </div>
       <p class="docs">
-        <a href="/files/Mohammad_Baker_CV.pdf" target="_blank" rel="noopener"><span class="en">CV (PDF)</span><span class="ar">السيرة الذاتية (PDF)</span></a>
-        <a href="/files/Mohammad_Baker_Portfolio.pdf" target="_blank" rel="noopener"><span class="en">Portfolio (PDF)</span><span class="ar">ملف الأعمال (PDF)</span></a>
+        <a href="/files/Mohammad_Baker_CV.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16"/></svg><span class="en">Download CV</span><span class="ar">السيرة الذاتية</span></a>
+        <a href="/files/Mohammad_Baker_Portfolio.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16"/></svg><span class="en">Portfolio</span><span class="ar">ملف الأعمال</span></a>
       </p>
     </div>
     <figure class="arch" style="margin:0">
