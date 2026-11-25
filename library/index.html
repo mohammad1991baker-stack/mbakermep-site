@@ -40,8 +40,8 @@
         <div id="loginMsg" class="msg" hidden></div>
       </form>
       <hr style="border:0;border-top:1px solid var(--rule);margin:22px 0 16px">
-      <h2 id="trial"><span class="en">Try it free for 3 days</span><span class="ar">جرّبه مجاناً ٣ أيام</span></h2>
-      <p class="muted" style="margin-top:4px"><span class="en">Create an account and read any 2 chapters of your choice in full, with their exercises and calculators. No card needed.</span><span class="ar">اعمل حساب واقرأ أي فصلين بتختارهم كاملين، مع التمارين والحاسبات. بدون بطاقة.</span></p>
+      <h2 id="trial"><span class="en">Try 2 chapters free</span><span class="ar">جرّب فصلين مجاناً</span></h2>
+      <p class="muted" style="margin-top:4px"><span class="en">Create an account, pick any 2 chapters from the list and read them in full, with their exercises and calculators, in one sitting. No card needed.</span><span class="ar">اعمل حساب، واختار أي فصلين من القائمة واقرأهم كاملين مع التمارين والحاسبات، بجلسة وحدة. بدون بطاقة.</span></p>
       <form id="signupForm">
         <label for="sName"><span class="en">Name</span><span class="ar">الاسم</span></label>
         <input id="sName" type="text" autocomplete="name">
@@ -113,15 +113,13 @@
     if (!active) {
       // free trial status (3 days from the first chapter, 2 chapters)
       let tr = null;
-      try { const r = await fetch(LIB.SUPABASE_URL + "/functions/v1/chapter", { method: "POST", headers: { "Content-Type": "application/json", apikey: LIB.SUPABASE_ANON_KEY, Authorization: "Bearer " + session.access_token }, body: JSON.stringify({ book: "fire-fighting-systems", peek: true }) }); if (r.ok) tr = await r.json(); } catch (e) {}
-      const ended = tr && tr.ends_at && new Date(tr.ends_at) < new Date(), full = tr && tr.used && tr.used.length >= tr.max;
+      try { const r = await fetch(LIB.SUPABASE_URL + "/functions/v1/chapter", { method: "POST", headers: { "Content-Type": "application/json", apikey: LIB.SUPABASE_ANON_KEY, Authorization: "Bearer " + session.access_token }, body: JSON.stringify({ book: "fire-fighting-systems", peek: true, sid: (function () { try { return sessionStorage.getItem("lib-trial-sid") || ""; } catch (e) { return ""; } })() }) }); if (r.ok) tr = await r.json(); } catch (e) {}
+      const ended = tr && tr.ended;
       const h = document.getElementById("noSubH"), p = document.getElementById("noSubP");
       if (sub) { h.textContent = LIBT("Your subscription has ended", "انتهى اشتراكك"); p.textContent = LIBT("Renew to keep reading every book.", "جدّد لتكمل قراءة كل الكتب."); }
-      else if (!tr || !tr.started) { h.textContent = LIBT("Your free trial is ready", "تجربتك المجانية جاهزة"); p.textContent = LIBT("Open a book and choose any 2 chapters. The 3 days start with the first chapter you open.", "افتح الكتاب واختار أي فصلين. الـ٣ أيام بتبلّش من أول فصل بتفتحه."); }
+      else if (!tr || !tr.started) { h.textContent = LIBT("Your free trial is ready", "تجربتك المجانية جاهزة"); p.textContent = LIBT("Open the book, pick 2 chapters from the list and read them in one sitting. Closing the page ends the trial.", "افتح الكتاب، واختار فصلين من القائمة، واقرأهم بجلسة وحدة. لما تسكّر الصفحة بتنتهي التجربة."); }
       else if (ended) { h.textContent = LIBT("Your free trial has ended", "انتهت تجربتك المجانية"); p.textContent = LIBT("Subscribe to read every chapter and every new book.", "اشترك لتقرأ كل الفصول وكل كتاب جديد."); }
-      else { const d = Math.max(0, Math.ceil((new Date(tr.ends_at) - Date.now()) / 86400000));
-        h.textContent = LIBT("Free trial · " + d + " day(s) left", "تجربة مجانية · باقي " + d + " يوم");
-        p.textContent = LIBT("Chapters used: " + tr.used.length + " of " + tr.max + (full ? ". You can reopen them until the trial ends." : "."), "الفصول المستخدمة: " + tr.used.length + " من " + tr.max + (full ? ". بتقدر ترجع لهم لحد ما تخلص التجربة." : ".")); }
+      else { h.textContent = LIBT("Free trial in progress", "التجربة المجانية شغّالة"); p.textContent = LIBT("Chapters opened: " + tr.used.length + " of " + tr.max + ".", "الفصول اللي فتحتها: " + tr.used.length + " من " + tr.max + "."); }
       if (sub || ended) return;
     }
     if (sub && active) document.getElementById("who").textContent = email + " · " + LIBT("subscription until ", "الاشتراك لغاية ") + new Date(sub.expires_at).toLocaleDateString();
