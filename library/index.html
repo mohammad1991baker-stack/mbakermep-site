@@ -39,8 +39,21 @@
         </div>
         <div id="loginMsg" class="msg" hidden></div>
       </form>
+      <hr style="border:0;border-top:1px solid var(--rule);margin:22px 0 16px">
+      <h2 id="trial"><span class="en">Try it free for 3 days</span><span class="ar">جرّبه مجاناً ٣ أيام</span></h2>
+      <p class="muted" style="margin-top:4px"><span class="en">Create an account and read any 2 chapters of your choice in full, with their exercises and calculators. No card needed.</span><span class="ar">اعمل حساب واقرأ أي فصلين بتختارهم كاملين، مع التمارين والحاسبات. بدون بطاقة.</span></p>
+      <form id="signupForm">
+        <label for="sName"><span class="en">Name</span><span class="ar">الاسم</span></label>
+        <input id="sName" type="text" autocomplete="name">
+        <label for="sEm"><span class="en">Email</span><span class="ar">الإيميل</span></label>
+        <input id="sEm" type="email" autocomplete="email" required dir="ltr">
+        <label for="sPw"><span class="en">Choose a password (8+ characters)</span><span class="ar">اختار كلمة سر (٨ أحرف أو أكثر)</span></label>
+        <input id="sPw" type="password" autocomplete="new-password" minlength="8" required dir="ltr">
+        <div class="row"><button type="submit" id="signupBtn"><span class="en">Start free trial</span><span class="ar">ابدأ التجربة المجانية</span></button></div>
+        <div id="signupMsg" class="msg" hidden></div>
+      </form>
     </div>
-    <div class="card">
+    <div class="card" id="subscribe">
       <h2><span class="en">Subscribe</span><span class="ar">الاشتراك</span></h2>
       <div class="price"><span id="price"></span> <small><span class="en">/ year · all books</span><span class="ar">/ سنة · كل الكتب</span></small></div>
       <ul class="ticks">
@@ -62,8 +75,8 @@
   <section id="inView" hidden>
     <p class="muted" id="who"></p>
     <div id="noSub" class="card" hidden>
-      <h2><span class="en">No active subscription</span><span class="ar">ما في اشتراك فعّال</span></h2>
-      <p><span class="en">This account has no active subscription yet, or it has expired.</span><span class="ar">هالحساب ما عليه اشتراك فعّال، أو الاشتراك انتهى.</span></p>
+      <h2 id="noSubH"></h2>
+      <p id="noSubP"></p>
       <a class="btn" id="buyBtn2" href="#"><span class="en">Subscribe</span><span class="ar">اشترك</span></a>
     </div>
     <div id="books" class="books"></div>
@@ -86,6 +99,8 @@
     document.getElementById("inView").hidden = !session;
     document.getElementById("outBtn").hidden = !session;
     if (!session) return;
+    const nx = new URLSearchParams(location.search).get("next");
+    if (nx && /^\/library\//.test(nx)) { location.href = nx; return; }
     const email = session.user.email.toLowerCase();
     document.getElementById("who").textContent = email;
     const isAdmin = email === LIB.ADMIN_EMAIL;
@@ -95,8 +110,21 @@
     const active = isAdmin || (sub && sub.status === "active" && new Date(sub.expires_at) > new Date());
     document.getElementById("noSub").hidden = active;
     const box = document.getElementById("books"); box.innerHTML = "";
-    if (!active) return;
-    if (sub) document.getElementById("who").textContent = email + " · " + LIBT("subscription until ", "الاشتراك لغاية ") + new Date(sub.expires_at).toLocaleDateString();
+    if (!active) {
+      // free trial status (3 days from the first chapter, 2 chapters)
+      let tr = null;
+      try { const r = await fetch(LIB.SUPABASE_URL + "/functions/v1/chapter", { method: "POST", headers: { "Content-Type": "application/json", apikey: LIB.SUPABASE_ANON_KEY, Authorization: "Bearer " + session.access_token }, body: JSON.stringify({ book: "fire-fighting-systems", peek: true }) }); if (r.ok) tr = await r.json(); } catch (e) {}
+      const ended = tr && tr.ends_at && new Date(tr.ends_at) < new Date(), full = tr && tr.used && tr.used.length >= tr.max;
+      const h = document.getElementById("noSubH"), p = document.getElementById("noSubP");
+      if (sub) { h.textContent = LIBT("Your subscription has ended", "انتهى اشتراكك"); p.textContent = LIBT("Renew to keep reading every book.", "جدّد لتكمل قراءة كل الكتب."); }
+      else if (!tr || !tr.started) { h.textContent = LIBT("Your free trial is ready", "تجربتك المجانية جاهزة"); p.textContent = LIBT("Open a book and choose any 2 chapters. The 3 days start with the first chapter you open.", "افتح الكتاب واختار أي فصلين. الـ٣ أيام بتبلّش من أول فصل بتفتحه."); }
+      else if (ended) { h.textContent = LIBT("Your free trial has ended", "انتهت تجربتك المجانية"); p.textContent = LIBT("Subscribe to read every chapter and every new book.", "اشترك لتقرأ كل الفصول وكل كتاب جديد."); }
+      else { const d = Math.max(0, Math.ceil((new Date(tr.ends_at) - Date.now()) / 86400000));
+        h.textContent = LIBT("Free trial · " + d + " day(s) left", "تجربة مجانية · باقي " + d + " يوم");
+        p.textContent = LIBT("Chapters used: " + tr.used.length + " of " + tr.max + (full ? ". You can reopen them until the trial ends." : "."), "الفصول المستخدمة: " + tr.used.length + " من " + tr.max + (full ? ". بتقدر ترجع لهم لحد ما تخلص التجربة." : ".")); }
+      if (sub || ended) return;
+    }
+    if (sub && active) document.getElementById("who").textContent = email + " · " + LIBT("subscription until ", "الاشتراك لغاية ") + new Date(sub.expires_at).toLocaleDateString();
     const { data: books } = await sb.from("books").select("slug,title_en,title_ar").eq("published", true).order("sort");
     (books || []).forEach(function (b) {
       const a = document.createElement("a"); a.className = "book"; a.href = "/library/read.html?b=" + encodeURIComponent(b.slug);
@@ -121,6 +149,19 @@
     if (!em) return libMsg(m, LIBT("Type your email first.", "اكتب إيميلك أول."), "bad");
     await sb.auth.resetPasswordForEmail(em, { redirectTo: location.origin + "/library/reset.html" });
     libMsg(m, LIBT("If this email has an account, a reset link is on its way.", "إذا الإيميل إله حساب، رح يوصلك رابط لتغيير كلمة السر."), "ok");
+  });
+  document.getElementById("signupForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const btn = document.getElementById("signupBtn"), m = document.getElementById("signupMsg"), em = document.getElementById("sEm").value.trim().toLowerCase();
+    btn.disabled = true;
+    const { data, error } = await sb.auth.signUp({ email: em, password: document.getElementById("sPw").value,
+      options: { emailRedirectTo: location.origin + "/library/", data: { name: document.getElementById("sName").value.trim() } } });
+    btn.disabled = false;
+    if (error) return libMsg(m, /registered|exists/i.test(error.message) ? LIBT("This email already has an account. Sign in above.", "هالإيميل إله حساب. سجّل دخول من فوق.") : LIBT("Could not create the account: ", "ما قدرنا نعمل الحساب: ") + error.message, "bad");
+    if (data && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) return libMsg(m, LIBT("This email already has an account. Sign in above.", "هالإيميل إله حساب. سجّل دخول من فوق."), "bad");
+    if (data && data.session) { render(); return; }
+    libMsg(m, LIBT("Almost there: we sent a confirmation link to " + em + ". Open it, and your trial is ready.", "خطوة أخيرة: بعتنا رابط تأكيد على " + em + ". افتحه، وتجربتك بتكون جاهزة."), "ok");
+    e.target.reset();
   });
   document.getElementById("outBtn").addEventListener("click", async function () { await sb.auth.signOut(); render(); });
   document.addEventListener("langchange", render);

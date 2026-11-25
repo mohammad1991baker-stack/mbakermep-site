@@ -15,14 +15,21 @@
   html,body{height:100%}
   body{display:flex;flex-direction:column;overflow:hidden;-webkit-user-select:none;user-select:none}
   header.top .wrap{width:calc(100% - 24px)}
+  #trialBar{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:7px 12px;font-size:14px;background:#fdf0d9;color:#5a3b00;border-bottom:1px solid #ecd3a3}
+  #trialBar a{font-weight:600}
   #stage{position:relative;flex:1;min-height:0;background:var(--wall)}
   #frame{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
-  #wm{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2;
-      background-repeat:repeat;opacity:.11}
-  #state{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;z-index:3;background:var(--stone)}
-  #state .card{max-width:460px}
+  #wm{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2;background-repeat:repeat;opacity:.11}
+  #state{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;z-index:3;background:var(--stone);overflow:auto}
+  #state .card{max-width:560px;width:100%}
   .bar{height:4px;background:var(--rule);border-radius:4px;overflow:hidden;margin-top:14px}
   .bar i{display:block;height:100%;width:0;background:var(--brass);transition:width .2s}
+  .chlist{display:grid;gap:6px;margin:14px 0 4px;text-align:start;max-height:46vh;overflow:auto}
+  .chlist button{display:flex;gap:10px;align-items:center;width:100%;text-align:start;padding:9px 12px;border:1px solid var(--rule);border-radius:10px;background:#fff;cursor:pointer;font:inherit;color:inherit}
+  .chlist button:hover{border-color:var(--brass)}
+  .chlist button[disabled]{opacity:.45;cursor:not-allowed}
+  .chlist .n{min-width:28px;font-weight:600;color:var(--brass)}
+  .chlist .tag{margin-inline-start:auto;font-size:12px;opacity:.75}
   @media print{body{display:none!important}}
 </style>
 <script data-goatcounter="https://mbakermep.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
@@ -32,33 +39,39 @@
   <a class="mark" href="/library/"><svg viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="22" height="22"/><rect x="9" y="9" width="22" height="22" transform="rotate(45 20 20)"/><circle cx="20" cy="20" r="4.2"/></g></svg><span class="en">LIBRARY</span><span class="ar">المكتبة</span></a>
   <nav class="tn"><span class="muted hide-s" id="title"></span><button class="lang" id="langBtn"><span class="en">العربية</span><span class="ar">English</span></button></nav>
 </div></header>
+<div id="trialBar" hidden></div>
 <div id="stage">
   <iframe id="frame" title="Book" sandbox="allow-scripts allow-same-origin allow-forms allow-popups-to-escape-sandbox" hidden></iframe>
   <div id="wm" hidden></div>
-  <div id="state"><div class="card">
+  <div id="state"><div class="card" id="stateCard">
     <p id="stateText"><span class="en">Opening the book…</span><span class="ar">جاري فتح الكتاب…</span></p>
     <div class="bar" id="bar"><i id="barFill"></i></div>
-    <p class="row" style="justify-content:center"><a class="btn ghost" href="/library/"><span class="en">Back to library</span><span class="ar">رجوع للمكتبة</span></a></p>
   </div></div>
 </div>
 <script>
 (async function () {
-  const state = document.getElementById("state"), stateText = document.getElementById("stateText");
-  function stop(en, ar) { state.hidden = false; document.getElementById("bar").hidden = true; stateText.textContent = LIBT(en, ar); document.getElementById("frame").remove(); }
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const T = (en, ar) => LIBT(en, ar);
   document.addEventListener("contextmenu", e => e.preventDefault());
   document.addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && /^[spu]$/i.test(e.key)) e.preventDefault(); });
 
-  const slug = new URLSearchParams(location.search).get("b");
-  if (!slug || LIB.SUPABASE_URL.indexOf("__") === 0) return stop("Book not found.", "الكتاب غير موجود.");
+  const q = new URLSearchParams(location.search), slug = q.get("b");
+  const frame = $("frame"), state = $("state"), card = $("stateCard");
+  function show(html) { card.innerHTML = html; state.hidden = false; }
+  function loading(on) { show('<p>' + T("Opening the chapter…", "جاري فتح الفصل…") + '</p><div class="bar"><i id="barFill"></i></div>'); }
+  const backBtn = '<p class="row" style="justify-content:center"><a class="btn ghost" href="/library/">' + T("Back to library", "رجوع للمكتبة") + "</a></p>";
+  if (!slug) return show("<p>" + T("Book not found.", "الكتاب غير موجود.") + "</p>" + backBtn);
+
   const sb = libClient();
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) { location.href = "/library/"; return; }
+  if (!session) { location.href = "/library/?next=" + encodeURIComponent(location.pathname + location.search); return; }
   const email = session.user.email.toLowerCase();
 
-  const { data: book } = await sb.from("books").select("slug,title_en,title_ar,file_path").eq("slug", slug).maybeSingle();
-  if (!book) return stop("Book not found.", "الكتاب غير موجود.");
-  const setTitle = () => document.getElementById("title").textContent = LIBT(book.title_en, book.title_ar);
-  setTitle(); document.addEventListener("langchange", setTitle);
+  const { data: book } = await sb.from("books").select("slug,title_en,title_ar,toc,chapters").eq("slug", slug).maybeSingle();
+  if (!book || !book.toc) return show("<p>" + T("This book is being prepared. Try again later.", "الكتاب قيد التجهيز. جرّب بعد شوي.") + "</p>" + backBtn);
+  const setTitle = () => $("title").textContent = LIBT(book.title_en, book.title_ar);
+  setTitle(); document.addEventListener("langchange", () => { setTitle(); paintTrial(); });
 
   // one open session per account
   const sid = crypto.randomUUID();
@@ -66,37 +79,136 @@
   const timer = setInterval(async () => {
     const { data } = await sb.from("active_sessions").select("session_id").eq("email", email).maybeSingle();
     if (data && data.session_id !== sid) {
-      clearInterval(timer);
-      stop("This account was opened on another device, so the book closed here. Open it again to continue.",
-           "انفتح هالحساب على جهاز ثاني، فتسكّر الكتاب هون. افتحه من جديد لتكمل.");
+      clearInterval(timer); frame.remove();
+      show("<p>" + T("This account was opened on another device, so the book closed here. Open it again to continue.", "انفتح هالحساب على جهاز ثاني، فتسكّر الكتاب هون. افتحه من جديد لتكمل.") + "</p>" + backBtn);
     }
   }, 45000);
 
-  // download the book (storage only answers subscribers)
-  let blob;
-  try {
-    const { data: signed, error } = await sb.storage.from("library").createSignedUrl(book.file_path, 60);
-    if (error || !signed) throw error || new Error("denied");
-    const res = await fetch(signed.signedUrl);
-    if (!res.ok) throw new Error("denied");
-    const total = +res.headers.get("content-length") || 0, reader = res.body.getReader(), parts = []; let got = 0;
-    for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); got += value.length;
-      if (total) document.getElementById("barFill").style.width = Math.round(got / total * 100) + "%"; }
-    blob = new Blob(parts);
-    if (book.file_path.endsWith(".gz")) blob = await new Response(blob.stream().pipeThrough(new DecompressionStream("gzip"))).blob();
-  } catch (e) {
-    return stop("Your subscription does not cover this book, or it has expired.", "اشتراكك ما بيشمل هالكتاب، أو انتهى.");
+  // watermark with the reader's email
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="360" height="220"><text x="20" y="130" transform="rotate(-24 180 110)" font-family="sans-serif" font-size="15" fill="#1D2232">' + email.replace(/[<&]/g, "") + "</text></svg>";
+  $("wm").style.backgroundImage = 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")'; $("wm").hidden = false;
+
+  const FN = LIB.SUPABASE_URL + "/functions/v1/chapter";
+  async function call(body) {
+    const { data: { session: s } } = await sb.auth.getSession();
+    return fetch(FN, { method: "POST", headers: { "Content-Type": "application/json", apikey: LIB.SUPABASE_ANON_KEY, Authorization: "Bearer " + (s ? s.access_token : "") }, body: JSON.stringify(Object.assign({ book: slug }, body)) });
+  }
+  let access = null, cur = null;
+  let lang = (function () { try { const v = JSON.parse(localStorage.getItem("ffs1:lang")); if (v === "ar" || v === "en") return v; } catch (e) {} return document.documentElement.getAttribute("data-lang") === "ar" ? "ar" : "en"; })();
+  const toc = () => (book.toc[lang] || book.toc.en);
+  const titleOf = n => { const c = toc().find(x => x.n === n); return c ? c.t : String(n); };
+  const isTrial = () => access && access.mode === "trial";
+  const isFree = n => isTrial() && (access.free || []).includes(n);
+  const lockedList = () => isTrial() && access.used.length >= access.max ? book.chapters.filter(n => !access.used.includes(n) && !(access.free || []).includes(n)) : [];
+  const subscribeUrl = "/library/#subscribe";
+
+  function paintTrial() {
+    const b = $("trialBar");
+    if (!isTrial()) { b.hidden = true; return; }
+    let left = "";
+    if (access.ends_at) { const ms = new Date(access.ends_at) - Date.now(), h = Math.max(0, Math.ceil(ms / 3600000)), d = Math.floor(h / 24);
+      left = d >= 1 ? T(d + " day(s) " + (h % 24) + " h left", "باقي " + d + " يوم و" + (h % 24) + " ساعة") : T(h + " h left", "باقي " + h + " ساعة"); }
+    b.innerHTML = "<span>" + T("Free trial", "تجربة مجانية") + (left ? " · " + left : "") + " · " +
+      T("chapters used: " + access.used.length + " of " + access.max, "الفصول المستخدمة: " + access.used.length + " من " + access.max) +
+      "</span><a href='" + subscribeUrl + "'>" + T("Subscribe for the full library", "اشترك للمكتبة كاملة") + "</a>";
+    b.hidden = false;
+  }
+  function tellFrame() { try { frame.contentWindow.postMessage({ ffs: 1, type: "access", locked: lockedList(), mode: access && access.mode }, "*"); } catch (e) {} }
+
+  function paywall(reason) {
+    const opened = (access && access.used || []).filter(n => reason !== "trial_ended");
+    let h = '<h2 style="margin-top:0">' + (reason === "trial_ended" ? T("Your free trial has ended", "انتهت تجربتك المجانية") : T("You have used your 2 trial chapters", "استخدمت الفصلين المجانيين")) + "</h2>";
+    h += "<p>" + T("Subscribe to read every chapter, with all the exercises and calculators, plus every new book added during your year.",
+                   "اشترك لتقرأ كل الفصول، مع كل التمارين والحاسبات، وكل كتاب جديد بينضاف خلال سنتك.") + "</p>";
+    h += '<p class="row" style="justify-content:center"><a class="btn" href="' + subscribeUrl + '">' + T("Subscribe · " + LIB.PRICE + " / year", "اشترك الآن — " + LIB.PRICE + " سنوياً") + "</a></p>";
+    if (opened.length) h += "<p class='muted'>" + T("You can still open your trial chapters:", "لسا بتقدر تفتح فصولك التجريبية:") + "</p><div class='chlist'>" +
+      opened.map(n => "<button data-ch='" + n + "'><span class='n'>" + String(n).padStart(2, "0") + "</span><span>" + esc(titleOf(n)) + "</span></button>").join("") + "</div>";
+    if (cur) h += '<p class="row" style="justify-content:center"><button class="btn ghost" id="backCur">' + T("Back to the chapter", "رجوع للفصل") + "</button></p>";
+    h += backBtn;
+    show(h); wire();
+    if ($("backCur")) $("backCur").onclick = () => { state.hidden = true; };
   }
 
-  // watermark with the reader's email
-  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="360" height="220"><text x="20" y="130" transform="rotate(-24 180 110)" font-family="sans-serif" font-size="15" fill="#1D2232">' +
-    email.replace(/[<&]/g, "") + "</text></svg>";
-  const wm = document.getElementById("wm"); wm.style.backgroundImage = 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")'; wm.hidden = false;
+  function chooser() {
+    let h = '<h2 style="margin-top:0">' + T("Start your free trial", "ابدأ تجربتك المجانية") + "</h2><p>" +
+      T("Choose any 2 chapters to read in full, with their exercises and calculators. The trial lasts 3 days from the first chapter you open. Practice & Tools is open throughout.",
+        "اختار أي فصلين تقرأهم كاملين، مع التمارين والحاسبات. التجربة مدتها ٣ أيام من أول فصل بتفتحه، وقسم التدريب والأدوات مفتوح طول التجربة.") + "</p><div class='chlist'>";
+    toc().forEach(c => {
+      const used = access.used.includes(c.n), free = isFree(c.n), dis = !used && !free && access.used.length >= access.max;
+      h += "<button data-ch='" + c.n + "'" + (dis ? " disabled" : "") + "><span class='n'>" + esc(c.k || String(c.n).padStart(2, "0")) + "</span><span>" + esc(c.t) + "</span><span class='tag'>" +
+        (used ? T("opened", "مفتوح") : free ? T("free", "مجاني") : dis ? "🔒" : "") + "</span></button>";
+    });
+    show(h + "</div>" + backBtn); wire();
+  }
 
-  const html = await blob.text();
-  const guard = "<style>@media print{body{display:none!important}}</style><script>document.addEventListener('contextmenu',e=>e.preventDefault());document.addEventListener('copy',e=>e.preventDefault());document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&/^[spu]$/i.test(e.key))e.preventDefault()});<\/script>";
-  const url = URL.createObjectURL(new Blob([html.replace(/<\/head>/i, guard + "</head>")], { type: "text/html" }));
-  const frame = document.getElementById("frame"); frame.src = url; frame.hidden = false; state.hidden = true;
+  function confirmUse(n) {
+    return new Promise(res => {
+      const left = access.max - access.used.length;
+      show('<h2 style="margin-top:0">' + esc(titleOf(n)) + "</h2><p>" +
+        T("This chapter will count as one of your trial chapters (" + (access.used.length + 1) + " of " + access.max + ").", "هالفصل رح ينحسب من فصول تجربتك (" + (access.used.length + 1) + " من " + access.max + ").") +
+        (left === 1 ? "<br>" + T("After it, other chapters need a subscription.", "بعده، باقي الفصول بتحتاج اشتراك.") : "") + "</p>" +
+        '<p class="row" style="justify-content:center"><button class="btn" id="yes">' + T("Open it", "افتحه") + '</button><button class="btn ghost" id="no">' + T("Choose another", "اختار غيره") + "</button></p>");
+      $("yes").onclick = () => res(true); $("no").onclick = () => res(false);
+    });
+  }
+
+  function wire() { card.querySelectorAll("[data-ch]").forEach(b => b.onclick = () => open(+b.dataset.ch)); }
+
+  async function open(n, opts) {
+    opts = opts || {};
+    if (isTrial() && !access.used.includes(n) && !isFree(n)) {
+      if (access.used.length >= access.max) return paywall("trial_limit");
+      if (!opts.confirmed && !(await confirmUse(n))) return chooser();
+    }
+    loading(true);
+    let res;
+    try { res = await call({ ch: n, lang }); } catch (e) { return show("<p>" + T("Connection problem. Try again.", "في مشكلة بالاتصال. جرّب كمان مرة.") + "</p>" + backBtn); }
+    if (!res.ok) {
+      let j = {}; try { j = await res.json(); } catch (e) {}
+      if (j.mode) { access = Object.assign(access || {}, j); paintTrial(); }
+      if (j.reason === "trial_ended" || j.reason === "trial_limit") return paywall(j.reason);
+      if (j.reason === "confirm") return show("<p>" + T("Please confirm your email first: open the link we sent you, then come back.", "أكّد إيميلك أول: افتح الرابط اللي بعتناه إلك، وارجع.") + "</p>" + backBtn);
+      if (j.reason === "signin") { location.href = "/library/"; return; }
+      return show("<p>" + T("This chapter could not be opened.", "ما قدرنا نفتح هالفصل.") + "</p>" + backBtn);
+    }
+    try { access = JSON.parse(res.headers.get("x-access") || "null") || access; } catch (e) {}
+    paintTrial();
+    const total = +res.headers.get("content-length") || 0, reader = res.body.getReader(), parts = []; let got = 0;
+    for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); got += value.length;
+      const f = $("barFill"); if (f) f.style.width = (total ? Math.round(got / total * 100) : Math.min(95, Math.round(got / 20000))) + "%"; }
+    let html = await new Response(new Blob(parts).stream().pipeThrough(new DecompressionStream("gzip"))).text();
+    if (opts.anchor) html = html.replace("window.__NAV={", "window.__NAV={\"anchor\":" + JSON.stringify(opts.anchor) + ",");
+    const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+    const old = frame.src; frame.src = url; frame.hidden = false; state.hidden = true;
+    if (old && old.startsWith("blob:")) setTimeout(() => URL.revokeObjectURL(old), 4000);
+    cur = n;
+    try { localStorage.setItem("lib-last:" + slug, JSON.stringify({ ch: n })); localStorage.setItem("ffs1:lang", JSON.stringify(lang)); } catch (e) {}
+    history.replaceState(null, "", "?b=" + encodeURIComponent(slug) + "&ch=" + n);
+  }
+
+  addEventListener("message", e => {
+    if (e.source !== frame.contentWindow) return;
+    const m = e.data || {}; if (!m.ffs) return;
+    if (m.type === "ready") tellFrame();
+    if (m.type === "go" && m.ch) open(+m.ch, { anchor: m.anchor });
+    if (m.type === "lang") { lang = m.lang === "ar" ? "ar" : "en"; open(cur || +m.ch, { confirmed: true }); }
+  });
+
+  // first screen: status, then the chapter
+  try { const r = await call({ peek: true }); access = r.ok ? await r.json() : null;
+        if (!r.ok) { const j = await r.json().catch(() => ({})); if (j.reason === "confirm") return show("<p>" + T("Please confirm your email first: open the link we sent you, then come back.", "أكّد إيميلك أول: افتح الرابط اللي بعتناه إلك، وارجع.") + "</p>" + backBtn); } }
+  catch (e) { access = null; }
+  if (!access) return show("<p>" + T("Connection problem. Try again.", "في مشكلة بالاتصال. جرّب كمان مرة.") + "</p>" + backBtn);
+  paintTrial();
+  let want = +q.get("ch") || 0;
+  if (!want) { try { want = (JSON.parse(localStorage.getItem("lib-last:" + slug)) || {}).ch || 0; } catch (e) {} }
+  if (isTrial()) {
+    if (access.ends_at && new Date(access.ends_at) < new Date()) return paywall("trial_ended");
+    if (want && (access.used.includes(want) || isFree(want))) return open(want);
+    if (access.used.length) return chooser();
+    return chooser();
+  }
+  open(want || (book.chapters || [1])[0]);
 })();
 </script>
 </body>

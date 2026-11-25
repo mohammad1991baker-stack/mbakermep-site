@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Reem+Kufi:wght@600&family=Readex+Pro:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/library/lib.css">
 <script src="/library/lib.js"></script>
+<script src="/library/split.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script data-goatcounter="https://mbakermep.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
@@ -67,6 +68,15 @@
         <tbody id="rows"></tbody>
       </table></div>
     </div>
+
+    <div class="card" style="margin-top:22px">
+      <div class="row" style="margin-top:0;justify-content:space-between"><h2 style="margin:0"><span class="en">Free trials</span><span class="ar">التجارب المجانية</span></h2><span class="muted" id="tcount"></span></div>
+      <p class="muted" style="margin:6px 0 0"><span class="en">3 days from the first chapter opened, up to 2 chapters of the reader's choice. One trial per email.</span><span class="ar">٣ أيام من أول فصل بيفتحه، وبحد أقصى فصلين بيختارهم القارئ. تجربة وحدة لكل إيميل.</span></p>
+      <div class="tablewrap"><table>
+        <thead><tr><th><span class="en">Email</span><span class="ar">الإيميل</span></th><th><span class="en">Started</span><span class="ar">بدأت</span></th><th><span class="en">Ends</span><span class="ar">بتنتهي</span></th><th><span class="en">Chapters opened</span><span class="ar">الفصول اللي فتحها</span></th><th><span class="en">Status</span><span class="ar">الحالة</span></th></tr></thead>
+        <tbody id="trows"></tbody>
+      </table></div>
+    </div>
   </div>
 </main>
 
@@ -109,7 +119,30 @@
     const { data: books } = await sb.from("books").select("*").order("sort");
     const bl = document.getElementById("bookList");
     bl.innerHTML = (books && books.length) ? "" : LIBT("No books yet.", "ما في كتب لسا.");
-    (books || []).forEach(b => { const p = document.createElement("p"); p.style.margin = "4px 0"; p.textContent = "• " + LIBT(b.title_en, b.title_ar) + "  (" + b.slug + ")"; bl.appendChild(p); });
+    (books || []).forEach(b => { const p = document.createElement("p"); p.style.margin = "4px 0"; p.textContent = "• " + LIBT(b.title_en, b.title_ar) + "  (" + b.slug + ")" + (b.chapters ? LIBT(" — " + b.chapters.length + " sections, served chapter by chapter", " — " + b.chapters.length + " قسم، بتنعرض فصل فصل") : LIBT(" — old single-file upload: upload it again", " — مرفوع كملف واحد قديم: ارفعه من جديد")); bl.appendChild(p);
+      if (!b.chapters && b.file_path && /\.html\.gz$/.test(b.file_path)) {
+        const btn = document.createElement("button"); btn.className = "ghost small"; btn.textContent = LIBT("Split into chapters now", "قسّمه لفصول الآن");
+        btn.onclick = async () => { btn.disabled = true; const m = document.getElementById("bMsg");
+          try {
+            libMsg(m, LIBT("Downloading the uploaded file…", "جاري تنزيل الملف المرفوع…"));
+            const { data: gz, error } = await sb.storage.from("library").download(b.file_path); if (error) throw error;
+            const text = await new Response(gz.stream().pipeThrough(new DecompressionStream("gzip"))).text();
+            await saveSplit(b.slug, text, m); libMsg(m, LIBT("Done: the book is now served chapter by chapter.", "تم: الكتاب صار ينعرض فصل فصل."), "ok"); load();
+          } catch (err) { libMsg(m, LIBT("Could not split: ", "ما زبط التقسيم: ") + (err.message || err), "bad"); btn.disabled = false; } };
+        bl.appendChild(btn);
+      } });
+
+    const { data: trials } = await sb.from("trials").select("*").order("started_at", { ascending: false });
+    const tb2 = document.getElementById("trows"); tb2.innerHTML = ""; let live = 0;
+    (trials || []).forEach(t => {
+      const ends = new Date(new Date(t.started_at).getTime() + 3 * 86400000), on = ends > now; if (on) live++;
+      const tr = document.createElement("tr");
+      tr.innerHTML = '<td dir="ltr"></td><td></td><td></td><td></td><td><span class="pill ' + (on ? "on" : "off") + '">' + (on ? LIBT("running", "شغّالة") : LIBT("ended", "انتهت")) + "</span></td>";
+      tr.children[0].textContent = t.email; tr.children[1].textContent = new Date(t.started_at).toLocaleString();
+      tr.children[2].textContent = ends.toLocaleString(); tr.children[3].textContent = (t.chapters || []).join(", ") || "—";
+      tb2.appendChild(tr);
+    });
+    document.getElementById("tcount").textContent = LIBT(live + " running of " + (trials || []).length, live + " شغّالة من " + (trials || []).length);
   }
 
   document.getElementById("genBtn").onclick = () => {
@@ -130,21 +163,27 @@
     btn.disabled = false;
   });
 
+  async function saveSplit(slug, text, m) {
+    const { toc, pages } = FFSSplit.split(text);
+    const keys = Object.keys(pages), base = slug + "/v" + Date.now() + "/";
+    for (let i = 0; i < keys.length; i++) {
+      libMsg(m, LIBT("Uploading chapter pages: " + (i + 1) + " / " + keys.length, "جاري رفع صفحات الفصول: " + (i + 1) + " / " + keys.length));
+      const gz = await new Response(new Blob([pages[keys[i]]]).stream().pipeThrough(new CompressionStream("gzip"))).blob();
+      let tries = 0, error;
+      do { ({ error } = await sb.storage.from("library").upload(base + keys[i] + ".html.gz", gz, { contentType: "application/gzip", upsert: true })); tries++; } while (error && tries < 3);
+      if (error) throw error;
+    }
+    const { error: e2 } = await sb.from("books").update({ file_path: base, chapters: toc.en.map(c => c.n), toc }).eq("slug", slug);
+    if (e2) throw e2;
+  }
+
   document.getElementById("bookForm").addEventListener("submit", async e => {
     e.preventDefault(); const m = document.getElementById("bMsg"), btn = document.getElementById("bBtn"); btn.disabled = true;
     const slug = document.getElementById("bSlug").value.trim(), f = document.getElementById("bFile").files[0];
     try {
-      let path = null;
-      if (f) {
-        libMsg(m, LIBT("Compressing and uploading…", "جاري الضغط والرفع…"));
-        const gz = await new Response(f.stream().pipeThrough(new CompressionStream("gzip"))).blob();
-        path = slug + "/" + Date.now() + ".html.gz";
-        const { error } = await sb.storage.from("library").upload(path, gz, { contentType: "application/gzip", upsert: true });
-        if (error) throw error;
-      }
       const row = { slug, title_en: document.getElementById("bEn").value.trim(), title_ar: document.getElementById("bAr").value.trim(), published: true };
-      if (path) row.file_path = path;
-      const { error: e2 } = await sb.from("books").upsert(row, { onConflict: "slug" }); if (e2) throw e2;
+      const { error: e0 } = await sb.from("books").upsert(row, { onConflict: "slug" }); if (e0) throw e0;
+      if (f) { libMsg(m, LIBT("Reading the file…", "جاري قراءة الملف…")); await saveSplit(slug, await f.text(), m); }
       libMsg(m, LIBT("Book saved.", "انحفظ الكتاب."), "ok"); load();
     } catch (err) { libMsg(m, LIBT("Could not save: ", "ما انحفظ: ") + (err.message || err), "bad"); }
     btn.disabled = false;
