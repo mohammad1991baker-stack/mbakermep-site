@@ -71,9 +71,9 @@
 
     <div class="card" style="margin-top:22px">
       <div class="row" style="margin-top:0;justify-content:space-between"><h2 style="margin:0"><span class="en">Free trials</span><span class="ar">التجارب المجانية</span></h2><span class="muted" id="tcount"></span></div>
-      <p class="muted" style="margin:6px 0 0"><span class="en">3 days from the first chapter opened, up to 2 chapters of the reader's choice. One trial per email.</span><span class="ar">٣ أيام من أول فصل بيفتحه، وبحد أقصى فصلين بيختارهم القارئ. تجربة وحدة لكل إيميل.</span></p>
+      <p class="muted" style="margin:6px 0 0"><span class="en">One sitting: up to 2 chapters of the reader's choice, ending when the page is closed (6 hours at most). One trial per email.</span><span class="ar">جلسة وحدة: لغاية فصلين بيختارهم القارئ، وبتنتهي لما يسكّر الصفحة (٦ ساعات كحد أقصى). تجربة وحدة لكل إيميل.</span></p>
       <div class="tablewrap"><table>
-        <thead><tr><th><span class="en">Email</span><span class="ar">الإيميل</span></th><th><span class="en">Started</span><span class="ar">بدأت</span></th><th><span class="en">Ends</span><span class="ar">بتنتهي</span></th><th><span class="en">Chapters opened</span><span class="ar">الفصول اللي فتحها</span></th><th><span class="en">Status</span><span class="ar">الحالة</span></th></tr></thead>
+        <thead><tr><th><span class="en">Email</span><span class="ar">الإيميل</span></th><th><span class="en">Started</span><span class="ar">بدأت</span></th><th><span class="en">Chapters opened</span><span class="ar">الفصول اللي فتحها</span></th><th><span class="en">Status</span><span class="ar">الحالة</span></th></tr></thead>
         <tbody id="trows"></tbody>
       </table></div>
     </div>
@@ -135,11 +135,11 @@
     const { data: trials } = await sb.from("trials").select("*").order("started_at", { ascending: false });
     const tb2 = document.getElementById("trows"); tb2.innerHTML = ""; let live = 0;
     (trials || []).forEach(t => {
-      const ends = new Date(new Date(t.started_at).getTime() + 3 * 86400000), on = ends > now; if (on) live++;
+      const on = (now - new Date(t.started_at)) < 6 * 3600000 && (t.chapters || []).length < 2; if (on) live++;
       const tr = document.createElement("tr");
-      tr.innerHTML = '<td dir="ltr"></td><td></td><td></td><td></td><td><span class="pill ' + (on ? "on" : "off") + '">' + (on ? LIBT("running", "شغّالة") : LIBT("ended", "انتهت")) + "</span></td>";
+      tr.innerHTML = '<td dir="ltr"></td><td></td><td></td><td><span class="pill ' + (on ? "on" : "off") + '">' + (on ? LIBT("may be running", "ممكن تكون شغّالة") : LIBT("ended", "انتهت")) + "</span></td>";
       tr.children[0].textContent = t.email; tr.children[1].textContent = new Date(t.started_at).toLocaleString();
-      tr.children[2].textContent = ends.toLocaleString(); tr.children[3].textContent = (t.chapters || []).join(", ") || "—";
+      tr.children[2].textContent = (t.chapters || []).join(", ") || "—";
       tb2.appendChild(tr);
     });
     document.getElementById("tcount").textContent = LIBT(live + " running of " + (trials || []).length, live + " شغّالة من " + (trials || []).length);
