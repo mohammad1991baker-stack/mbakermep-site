@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — Mohammad Baker Library</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Reem+Kufi:wght@600&family=Readex+Pro:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/library/lib.css">
+<script src="/library/lib.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script data-goatcounter="https://mbakermep.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="mark" href="/library/"><svg viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="22" height="22"/><rect x="9" y="9" width="22" height="22" transform="rotate(45 20 20)"/><circle cx="20" cy="20" r="4.2"/></g></svg><span class="en">DASHBOARD</span><span class="ar">لوحة التحكم</span></a>
+  <nav class="tn"><a href="/library/"><span class="en">Library</span><span class="ar">المكتبة</span></a><button class="lang" id="langBtn"><span class="en">العربية</span><span class="ar">English</span></button></nav>
+</div></header>
+
+<main class="wrap">
+  <div id="deny" class="card" hidden><p><span class="en">This page is for the site owner. Sign in from the library page with the owner account.</span><span class="ar">هالصفحة لصاحب الموقع بس. سجّل دخول من صفحة المكتبة بحساب صاحب الموقع.</span></p><a class="btn" href="/library/"><span class="en">Go to sign in</span><span class="ar">تسجيل الدخول</span></a></div>
+
+  <div id="panel" hidden>
+    <h1><span class="en">Subscribers</span><span class="ar">المشتركين</span></h1>
+    <div class="grid2">
+      <form class="card" id="addForm">
+        <h2><span class="en">Give access</span><span class="ar">إعطاء صلاحية دخول</span></h2>
+        <p class="muted"><span class="en">Creates the reader's login (or resets its password) and opens the library for them.</span><span class="ar">بيعمل حساب للقارئ (أو بيغيّر كلمة سرّه إذا موجود) وبيفتحله المكتبة.</span></p>
+        <label for="aEmail"><span class="en">Email</span><span class="ar">الإيميل</span></label>
+        <input id="aEmail" type="email" required dir="ltr">
+        <label for="aName"><span class="en">Name (optional)</span><span class="ar">الاسم (اختياري)</span></label>
+        <input id="aName" type="text">
+        <label for="aPass"><span class="en">Password for the reader (8+ characters)</span><span class="ar">كلمة سر للقارئ (٨ خانات أو أكثر)</span></label>
+        <div class="row" style="margin-top:0"><input id="aPass" type="text" minlength="8" required dir="ltr" style="flex:1;min-width:180px" autocomplete="off"><button type="button" class="ghost small" id="genBtn"><span class="en">Generate</span><span class="ar">توليد</span></button></div>
+        <label for="aMonths"><span class="en">Duration (months)</span><span class="ar">المدة (بالأشهر)</span></label>
+        <select id="aMonths"><option value="12">12</option><option value="6">6</option><option value="3">3</option><option value="1">1</option><option value="24">24</option></select>
+        <label for="aSource"><span class="en">How they paid</span><span class="ar">طريقة الدفع</span></label>
+        <select id="aSource"><option value="manual" data-en="Transfer / CliQ / cash" data-ar="تحويل / CliQ / كاش"></option><option value="company" data-en="Company" data-ar="شركة"></option><option value="gift" data-en="Gift" data-ar="هدية"></option><option value="lemonsqueezy" data-en="Card (Lemon Squeezy)" data-ar="بطاقة (Lemon Squeezy)"></option></select>
+        <label for="aNote"><span class="en">Note</span><span class="ar">ملاحظة</span></label>
+        <input id="aNote" type="text">
+        <div class="row"><button type="submit" id="addBtn"><span class="en">Give access</span><span class="ar">إعطاء الصلاحية</span></button></div>
+        <div id="addMsg" class="msg" hidden></div>
+      </form>
+
+      <div class="card">
+        <h2><span class="en">Books</span><span class="ar">الكتب</span></h2>
+        <div id="bookList" class="muted"></div>
+        <details style="margin-top:14px"><summary><span class="en">Add or replace a book file</span><span class="ar">إضافة كتاب أو استبدال ملفه</span></summary>
+          <form id="bookForm">
+            <label><span class="en">Short id (latin, no spaces)</span><span class="ar">معرّف قصير (أحرف إنجليزية بدون فراغات)</span></label><input id="bSlug" required dir="ltr" pattern="[a-z0-9-]+">
+            <label><span class="en">Title (English)</span><span class="ar">العنوان (إنجليزي)</span></label><input id="bEn" required>
+            <label><span class="en">Title (Arabic)</span><span class="ar">العنوان (عربي)</span></label><input id="bAr" required dir="rtl">
+            <label><span class="en">Interactive book file (.html)</span><span class="ar">ملف الكتاب التفاعلي (.html)</span></label><input id="bFile" type="file" accept=".html,.htm">
+            <div class="row"><button type="submit" id="bBtn"><span class="en">Save book</span><span class="ar">حفظ الكتاب</span></button></div>
+            <div id="bMsg" class="msg" hidden></div>
+          </form>
+        </details>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:22px">
+      <div class="row" style="margin-top:0;justify-content:space-between"><h2 style="margin:0"><span class="en">All subscribers</span><span class="ar">كل المشتركين</span></h2><span class="muted" id="count"></span></div>
+      <div class="tablewrap"><table>
+        <thead><tr><th><span class="en">Email</span><span class="ar">الإيميل</span></th><th><span class="en">Name</span><span class="ar">الاسم</span></th><th><span class="en">Until</span><span class="ar">لغاية</span></th><th><span class="en">Status</span><span class="ar">الحالة</span></th><th><span class="en">Paid by</span><span class="ar">الدفع</span></th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table></div>
+    </div>
+  </div>
+</main>
+
+<script>
+(async function () {
+  if (LIB.SUPABASE_URL.indexOf("__") === 0) return;
+  const sb = libClient();
+  const { data: { session } } = await sb.auth.getSession();
+  const email = session && session.user.email.toLowerCase();
+  if (!session || email !== LIB.ADMIN_EMAIL) { document.getElementById("deny").hidden = false; return; }
+  document.getElementById("panel").hidden = false;
+
+  async function callAdmin(body) {
+    const { data, error } = await sb.functions.invoke("admin-users", { body });
+    if (error) { let m = error.message; try { m = (await error.context.json()).error || m; } catch (e) {} throw new Error(m); }
+    return data;
+  }
+
+  async function load() {
+    const { data: rows } = await sb.from("subscribers").select("*").order("created_at", { ascending: false });
+    const tb = document.getElementById("rows"); tb.innerHTML = "";
+    const now = new Date(); let active = 0;
+    (rows || []).forEach(r => {
+      const on = r.status === "active" && new Date(r.expires_at) > now; if (on) active++;
+      const tr = document.createElement("tr");
+      tr.innerHTML = '<td dir="ltr"></td><td></td><td></td><td><span class="pill ' + (on ? "on" : "off") + '">' +
+        (on ? LIBT("active", "فعّال") : LIBT("stopped", "موقوف")) + "</span></td><td></td><td></td>";
+      tr.children[0].textContent = r.email; tr.children[1].textContent = r.name || "";
+      tr.children[2].textContent = new Date(r.expires_at).toLocaleDateString(); tr.children[4].textContent = r.source;
+      const act = document.createElement("div"); act.className = "row"; act.style.marginTop = "0";
+      const mk = (en, ar, fn) => { const b = document.createElement("button"); b.className = "ghost small"; b.textContent = LIBT(en, ar); b.onclick = fn; act.appendChild(b); };
+      mk("+12 months", "+١٢ شهر", async () => { const d = new Date(Math.max(new Date(r.expires_at), now)); d.setMonth(d.getMonth() + 12);
+        await sb.from("subscribers").update({ expires_at: d.toISOString(), status: "active" }).eq("id", r.id); load(); });
+      if (on) mk("Stop", "إيقاف", async () => { if (confirm(LIBT("Stop access for ", "إيقاف الدخول لـ ") + r.email + "?")) { await sb.from("subscribers").update({ status: "cancelled" }).eq("id", r.id); load(); } });
+      else mk("Resume", "تفعيل", async () => { await sb.from("subscribers").update({ status: "active" }).eq("id", r.id); load(); });
+      tr.children[5].appendChild(act); tb.appendChild(tr);
+    });
+    document.getElementById("count").textContent = LIBT(active + " active of " + (rows || []).length, active + " فعّال من " + (rows || []).length);
+
+    const { data: books } = await sb.from("books").select("*").order("sort");
+    const bl = document.getElementById("bookList");
+    bl.innerHTML = (books && books.length) ? "" : LIBT("No books yet.", "ما في كتب لسا.");
+    (books || []).forEach(b => { const p = document.createElement("p"); p.style.margin = "4px 0"; p.textContent = "• " + LIBT(b.title_en, b.title_ar) + "  (" + b.slug + ")"; bl.appendChild(p); });
+  }
+
+  document.getElementById("genBtn").onclick = () => {
+    const c = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789"; let s = "";
+    crypto.getRandomValues(new Uint32Array(10)).forEach(n => s += c[n % c.length]); document.getElementById("aPass").value = s;
+  };
+
+  document.getElementById("addForm").addEventListener("submit", async e => {
+    e.preventDefault(); const m = document.getElementById("addMsg"), btn = document.getElementById("addBtn"); btn.disabled = true;
+    const em = document.getElementById("aEmail").value.trim().toLowerCase(), pw = document.getElementById("aPass").value;
+    try {
+      const r = await callAdmin({ action: "create", email: em, password: pw, months: +document.getElementById("aMonths").value,
+        name: document.getElementById("aName").value.trim(), source: document.getElementById("aSource").value, note: document.getElementById("aNote").value.trim() });
+      libMsg(m, LIBT("Done. Send the reader: mbakermep.com/library — email: " + em + " — password: " + pw,
+                     "تم. ابعت للقارئ: mbakermep.com/library — الإيميل: " + em + " — كلمة السر: " + pw), "ok");
+      e.target.reset(); load();
+    } catch (err) { libMsg(m, LIBT("Could not save: ", "ما انحفظ: ") + err.message, "bad"); }
+    btn.disabled = false;
+  });
+
+  document.getElementById("bookForm").addEventListener("submit", async e => {
+    e.preventDefault(); const m = document.getElementById("bMsg"), btn = document.getElementById("bBtn"); btn.disabled = true;
+    const slug = document.getElementById("bSlug").value.trim(), f = document.getElementById("bFile").files[0];
+    try {
+      let path = null;
+      if (f) {
+        libMsg(m, LIBT("Compressing and uploading…", "جاري الضغط والرفع…"));
+        const gz = await new Response(f.stream().pipeThrough(new CompressionStream("gzip"))).blob();
+        path = slug + "/" + Date.now() + ".html.gz";
+        const { error } = await sb.storage.from("library").upload(path, gz, { contentType: "application/gzip", upsert: true });
+        if (error) throw error;
+      }
+      const row = { slug, title_en: document.getElementById("bEn").value.trim(), title_ar: document.getElementById("bAr").value.trim(), published: true };
+      if (path) row.file_path = path;
+      const { error: e2 } = await sb.from("books").upsert(row, { onConflict: "slug" }); if (e2) throw e2;
+      libMsg(m, LIBT("Book saved.", "انحفظ الكتاب."), "ok"); load();
+    } catch (err) { libMsg(m, LIBT("Could not save: ", "ما انحفظ: ") + (err.message || err), "bad"); }
+    btn.disabled = false;
+  });
+
+  const opts = () => document.querySelectorAll('option[data-en]').forEach(o => o.textContent = LIBT(o.dataset.en, o.dataset.ar));
+  opts(); document.addEventListener("langchange", () => { opts(); load(); });
+  load();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Library — Mohammad Baker</title>
+<meta name="description" content="Interactive engineering books by Eng. Mohammad Yacoub Baker. One subscription opens every book.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Reem+Kufi:wght@600&family=Readex+Pro:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/library/lib.css">
+<script src="/library/lib.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script data-goatcounter="https://mbakermep.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="mark" href="/"><svg viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="22" height="22"/><rect x="9" y="9" width="22" height="22" transform="rotate(45 20 20)"/><circle cx="20" cy="20" r="4.2"/></g></svg><span class="en">MOHAMMAD BAKER</span><span class="ar">م. محمد يعقوب بكر</span></a>
+  <nav class="tn"><a class="hide-s" href="/articles/"><span class="en">Articles</span><span class="ar">المقالات</span></a><button id="outBtn" class="ghost small" hidden><span class="en">Sign out</span><span class="ar">خروج</span></button><button class="lang" id="langBtn"><span class="en">العربية</span><span class="ar">English</span></button></nav>
+</div></header>
+
+<main class="wrap">
+  <h1><span class="en">Library</span><span class="ar">المكتبة</span></h1>
+  <p class="lead"><span class="en">Interactive editions of my engineering books: exercises graded as you answer, project calculators and the code clause behind every result. One subscription opens every book.</span><span class="ar">النسخ التفاعلية من كتبي الهندسية: تمارين بتصحّح فوراً، وحاسبات للمشاريع، ومرجع الكود (Code Reference) مع كل نتيجة. اشتراك واحد بيفتح كل الكتب.</span></p>
+
+  <!-- signed out -->
+  <section id="outView" class="grid2" hidden>
+    <div class="card">
+      <h2><span class="en">Sign in</span><span class="ar">تسجيل الدخول</span></h2>
+      <form id="loginForm">
+        <label for="em"><span class="en">Email</span><span class="ar">الإيميل</span></label>
+        <input id="em" type="email" autocomplete="email" required dir="ltr">
+        <label for="pw"><span class="en">Password</span><span class="ar">كلمة السر</span></label>
+        <input id="pw" type="password" autocomplete="current-password" required dir="ltr">
+        <div class="row">
+          <button type="submit" id="loginBtn"><span class="en">Sign in</span><span class="ar">دخول</span></button>
+          <button type="button" class="ghost" id="forgotBtn"><span class="en">Forgot password?</span><span class="ar">نسيت كلمة السر؟</span></button>
+        </div>
+        <div id="loginMsg" class="msg" hidden></div>
+      </form>
+    </div>
+    <div class="card">
+      <h2><span class="en">Subscribe</span><span class="ar">الاشتراك</span></h2>
+      <div class="price"><span id="price"></span> <small><span class="en">/ year · all books</span><span class="ar">/ سنة · كل الكتب</span></small></div>
+      <ul class="ticks">
+        <li><span class="en">Fire Fighting Systems — interactive edition (Arabic &amp; English)</span><span class="ar">أنظمة مكافحة الحريق — النسخة التفاعلية (عربي وإنجليزي)</span></li>
+        <li><span class="en">Every new book added during your year</span><span class="ar">أي كتاب جديد بينضاف خلال سنة اشتراكك</span></li>
+        <li><span class="en">Updates when new code editions come out</span><span class="ar">تحديثات مع الإصدارات الجديدة من الكود</span></li>
+      </ul>
+      <div class="row">
+        <a class="btn" id="buyBtn" href="#"><span class="en">Subscribe</span><span class="ar">اشترك</span></a>
+      </div>
+      <p class="muted"><span class="en">Card payment online, or bank transfer / CliQ in Jordan: send a message and your account is activated by hand.</span><span class="ar">الدفع بالبطاقة أونلاين، أو تحويل بنكي / CliQ بالأردن: ابعت رسالة وبيتفعّل حسابك يدوياً.</span></p>
+    </div>
+  </section>
+
+  <!-- signed in -->
+  <section id="inView" hidden>
+    <p class="muted" id="who"></p>
+    <div id="noSub" class="card" hidden>
+      <h2><span class="en">No active subscription</span><span class="ar">ما في اشتراك فعّال</span></h2>
+      <p><span class="en">This account has no active subscription yet, or it has expired.</span><span class="ar">هالحساب ما عليه اشتراك فعّال، أو الاشتراك انتهى.</span></p>
+      <a class="btn" id="buyBtn2" href="#"><span class="en">Subscribe</span><span class="ar">اشترك</span></a>
+    </div>
+    <div id="books" class="books"></div>
+    <p class="row" id="adminLink" hidden><a class="btn ghost" href="/library/admin.html"><span class="en">Dashboard</span><span class="ar">لوحة التحكم</span></a></p>
+  </section>
+
+  <p id="setup" class="msg" hidden>The library is being set up.</p>
+</main>
+
+<script>
+(async function () {
+  document.getElementById("price").textContent = LIB.PRICE;
+  ["buyBtn", "buyBtn2"].forEach(function (id) { document.getElementById(id).href = LIB.BUY_URL; });
+  if (LIB.SUPABASE_URL.indexOf("__") === 0) { document.getElementById("setup").hidden = false; return; }
+  const sb = libClient();
+
+  async function render() {
+    const { data: { session } } = await sb.auth.getSession();
+    document.getElementById("outView").hidden = !!session;
+    document.getElementById("inView").hidden = !session;
+    document.getElementById("outBtn").hidden = !session;
+    if (!session) return;
+    const email = session.user.email.toLowerCase();
+    document.getElementById("who").textContent = email;
+    const isAdmin = email === LIB.ADMIN_EMAIL;
+    document.getElementById("adminLink").hidden = !isAdmin;
+
+    const { data: sub } = await sb.from("subscribers").select("status,expires_at").ilike("email", email).maybeSingle();
+    const active = isAdmin || (sub && sub.status === "active" && new Date(sub.expires_at) > new Date());
+    document.getElementById("noSub").hidden = active;
+    const box = document.getElementById("books"); box.innerHTML = "";
+    if (!active) return;
+    if (sub) document.getElementById("who").textContent = email + " · " + LIBT("subscription until ", "الاشتراك لغاية ") + new Date(sub.expires_at).toLocaleDateString();
+    const { data: books } = await sb.from("books").select("slug,title_en,title_ar").eq("published", true).order("sort");
+    (books || []).forEach(function (b) {
+      const a = document.createElement("a"); a.className = "book"; a.href = "/library/read.html?b=" + encodeURIComponent(b.slug);
+      a.innerHTML = '<b><span class="en"></span><span class="ar"></span></b><span class="muted"><span class="en">Open</span><span class="ar">افتح</span></span>';
+      a.querySelector("b .en").textContent = b.title_en; a.querySelector("b .ar").textContent = b.title_ar;
+      box.appendChild(a);
+    });
+    if (!books || !books.length) box.innerHTML = '<p class="muted">' + LIBT("Books are being uploaded.", "الكتب قيد الرفع.") + "</p>";
+  }
+
+  document.getElementById("loginForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const btn = document.getElementById("loginBtn"), m = document.getElementById("loginMsg");
+    btn.disabled = true;
+    const { error } = await sb.auth.signInWithPassword({ email: document.getElementById("em").value.trim(), password: document.getElementById("pw").value });
+    btn.disabled = false;
+    if (error) return libMsg(m, LIBT("Wrong email or password.", "الإيميل أو كلمة السر غلط."), "bad");
+    render();
+  });
+  document.getElementById("forgotBtn").addEventListener("click", async function () {
+    const m = document.getElementById("loginMsg"), em = document.getElementById("em").value.trim();
+    if (!em) return libMsg(m, LIBT("Type your email first.", "اكتب إيميلك أول."), "bad");
+    await sb.auth.resetPasswordForEmail(em, { redirectTo: location.origin + "/library/reset.html" });
+    libMsg(m, LIBT("If this email has an account, a reset link is on its way.", "إذا الإيميل إله حساب، رح يوصلك رابط لتغيير كلمة السر."), "ok");
+  });
+  document.getElementById("outBtn").addEventListener("click", async function () { await sb.auth.signOut(); render(); });
+  document.addEventListener("langchange", render);
+  render();
+})();
+</script>
+</body>
+</html>

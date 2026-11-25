@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New password — Mohammad Baker Library</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Reem+Kufi:wght@600&family=Readex+Pro:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/library/lib.css">
+<script src="/library/lib.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script data-goatcounter="https://mbakermep.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<main class="wrap" style="max-width:460px">
+  <form class="card" id="f">
+    <h2><span class="en">Choose a new password</span><span class="ar">اختار كلمة سر جديدة</span></h2>
+    <label for="p1"><span class="en">New password (8+ characters)</span><span class="ar">كلمة السر الجديدة (٨ خانات أو أكثر)</span></label>
+    <input id="p1" type="password" minlength="8" required autocomplete="new-password" dir="ltr">
+    <div class="row"><button type="submit"><span class="en">Save</span><span class="ar">حفظ</span></button></div>
+    <div id="m" class="msg" hidden></div>
+  </form>
+</main>
+<script>
+(function () {
+  const sb = libClient();
+  document.getElementById("f").addEventListener("submit", async e => {
+    e.preventDefault();
+    const { error } = await sb.auth.updateUser({ password: document.getElementById("p1").value });
+    if (error) return libMsg(document.getElementById("m"), LIBT("The link has expired. Ask for a new one from the library page.", "الرابط انتهى. اطلب رابط جديد من صفحة المكتبة."), "bad");
+    libMsg(document.getElementById("m"), LIBT("Saved. Opening the library…", "انحفظت. جاري فتح المكتبة…"), "ok");
+    setTimeout(() => location.href = "/library/", 1200);
+  });
+})();
+</script>
+</body>
+</html>
