@@ -89,35 +89,47 @@
   $("wm").style.backgroundImage = 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")'; $("wm").hidden = false;
 
   const FN = LIB.SUPABASE_URL + "/functions/v1/chapter";
+  // one trial sitting = this browser tab (sessionStorage dies with the tab)
+  let tsid = null; try { tsid = sessionStorage.getItem("lib-trial-sid"); if (!tsid) { tsid = crypto.randomUUID(); sessionStorage.setItem("lib-trial-sid", tsid); } } catch (e) { tsid = crypto.randomUUID(); }
   async function call(body) {
     const { data: { session: s } } = await sb.auth.getSession();
-    return fetch(FN, { method: "POST", headers: { "Content-Type": "application/json", apikey: LIB.SUPABASE_ANON_KEY, Authorization: "Bearer " + (s ? s.access_token : "") }, body: JSON.stringify(Object.assign({ book: slug }, body)) });
+    return fetch(FN, { method: "POST", headers: { "Content-Type": "application/json", apikey: LIB.SUPABASE_ANON_KEY, Authorization: "Bearer " + (s ? s.access_token : "") }, body: JSON.stringify(Object.assign({ book: slug, sid: tsid }, body)) });
   }
   let access = null, cur = null;
   let lang = (function () { try { const v = JSON.parse(localStorage.getItem("ffs1:lang")); if (v === "ar" || v === "en") return v; } catch (e) {} return document.documentElement.getAttribute("data-lang") === "ar" ? "ar" : "en"; })();
   const toc = () => (book.toc[lang] || book.toc.en);
   const titleOf = n => { const c = toc().find(x => x.n === n); return c ? c.t : String(n); };
   const isTrial = () => access && access.mode === "trial";
-  const isFree = n => isTrial() && (access.free || []).includes(n);
+  const isFree = n => false;
   const lockedList = () => isTrial() && access.used.length >= access.max ? book.chapters.filter(n => !access.used.includes(n) && !(access.free || []).includes(n)) : [];
   const subscribeUrl = "/library/#subscribe";
 
   function paintTrial() {
     const b = $("trialBar");
     if (!isTrial()) { b.hidden = true; return; }
-    let left = "";
-    if (access.ends_at) { const ms = new Date(access.ends_at) - Date.now(), h = Math.max(0, Math.ceil(ms / 3600000)), d = Math.floor(h / 24);
-      left = d >= 1 ? T(d + " day(s) " + (h % 24) + " h left", "باقي " + d + " يوم و" + (h % 24) + " ساعة") : T(h + " h left", "باقي " + h + " ساعة"); }
-    b.innerHTML = "<span>" + T("Free trial", "تجربة مجانية") + (left ? " · " + left : "") + " · " +
-      T("chapters used: " + access.used.length + " of " + access.max, "الفصول المستخدمة: " + access.used.length + " من " + access.max) +
-      "</span><a href='" + subscribeUrl + "'>" + T("Subscribe for the full library", "اشترك للمكتبة كاملة") + "</a>";
+    b.innerHTML = "<span>" + T("Free trial", "تجربة مجانية") + " · " +
+      T("chapters: " + access.used.length + " of " + access.max, "الفصول: " + access.used.length + " من " + access.max) + " · " +
+      T("ends when you close this page", "بتنتهي لما تسكّر هالصفحة") + "</span>" +
+      (cur ? "<a href='#' id='toList'>" + T("Chapter list", "قائمة الفصول") + "</a>" : "") +
+      "<a href='" + subscribeUrl + "'>" + T("Subscribe for the full library", "اشترك للمكتبة كاملة") + "</a>";
     b.hidden = false;
+    const tl = $("toList"); if (tl) tl.onclick = e => { e.preventDefault(); chooser(); };
   }
-  function tellFrame() { try { frame.contentWindow.postMessage({ ffs: 1, type: "access", locked: lockedList(), mode: access && access.mode }, "*"); } catch (e) {} }
+  function tellFrame() {
+    if (isTrial()) {
+      try { const d = frame.contentDocument;
+        d.querySelectorAll('#rail .chap[data-ch^="x"], .ffsnav').forEach(x => x.remove());
+        const st = d.createElement("style"); st.textContent = '#rail .chap[data-ch^="x"],.ffsnav{display:none!important}'; d.head.appendChild(st);
+      } catch (e) {}
+      return;
+    }
+    try { frame.contentWindow.postMessage({ ffs: 1, type: "access", locked: lockedList(), mode: access && access.mode }, "*"); } catch (e) {}
+  }
 
   function paywall(reason) {
     const opened = (access && access.used || []).filter(n => reason !== "trial_ended");
-    let h = '<h2 style="margin-top:0">' + (reason === "trial_ended" ? T("Your free trial has ended", "انتهت تجربتك المجانية") : T("You have used your 2 trial chapters", "استخدمت الفصلين المجانيين")) + "</h2>";
+    let h = '<h2 style="margin-top:0">' + (reason === "trial_ended" ? T("Your free trial has ended", "انتهت تجربتك المجانية") : T("You have opened your 2 trial chapters", "فتحت الفصلين المجانيين")) + "</h2>";
+    if (reason === "trial_ended") h += "<p class='muted'>" + T("The free trial is one sitting: it ends when the page is closed, and each email gets one trial.", "التجربة المجانية جلسة وحدة: بتنتهي لما تتسكّر الصفحة، وكل إيميل إله تجربة وحدة.") + "</p>";
     h += "<p>" + T("Subscribe to read every chapter, with all the exercises and calculators, plus every new book added during your year.",
                    "اشترك لتقرأ كل الفصول، مع كل التمارين والحاسبات، وكل كتاب جديد بينضاف خلال سنتك.") + "</p>";
     h += '<p class="row" style="justify-content:center"><a class="btn" href="' + subscribeUrl + '">' + T("Subscribe · " + LIB.PRICE + " / year", "اشترك الآن — " + LIB.PRICE + " سنوياً") + "</a></p>";
@@ -131,14 +143,16 @@
 
   function chooser() {
     let h = '<h2 style="margin-top:0">' + T("Start your free trial", "ابدأ تجربتك المجانية") + "</h2><p>" +
-      T("Choose any 2 chapters to read in full, with their exercises and calculators. The trial lasts 3 days from the first chapter you open. Practice & Tools is open throughout.",
-        "اختار أي فصلين تقرأهم كاملين، مع التمارين والحاسبات. التجربة مدتها ٣ أيام من أول فصل بتفتحه، وقسم التدريب والأدوات مفتوح طول التجربة.") + "</p><div class='chlist'>";
+      T("Choose 2 chapters and read them in full, with their exercises and calculators. Open one, come back to this list, and open the second. The trial is one sitting: once you close this page it ends, and it cannot be started again with the same email.",
+        "اختار فصلين واقرأهم كاملين، مع التمارين والحاسبات. افتح الأول، وارجع لهالقائمة وافتح الثاني. التجربة جلسة وحدة: لما تسكّر الصفحة بتنتهي، وما بتنفتح مرة ثانية بنفس الإيميل.") + "</p><div class='chlist'>";
     toc().forEach(c => {
       const used = access.used.includes(c.n), free = isFree(c.n), dis = !used && !free && access.used.length >= access.max;
       h += "<button data-ch='" + c.n + "'" + (dis ? " disabled" : "") + "><span class='n'>" + esc(c.k || String(c.n).padStart(2, "0")) + "</span><span>" + esc(c.t) + "</span><span class='tag'>" +
-        (used ? T("opened", "مفتوح") : free ? T("free", "مجاني") : dis ? "🔒" : "") + "</span></button>";
+        (used ? T("opened · read again", "مفتوح · ارجع له") : dis ? "🔒" : "") + "</span></button>";
     });
+    if (cur) h += "</div><p class='row' style='justify-content:center'><button class='btn ghost' id='backCur'>" + T("Back to the chapter", "رجوع للفصل") + "</button></p><div>";
     show(h + "</div>" + backBtn); wire();
+    if ($("backCur")) $("backCur").onclick = () => { state.hidden = true; };
   }
 
   function confirmUse(n) {
@@ -146,7 +160,8 @@
       const left = access.max - access.used.length;
       show('<h2 style="margin-top:0">' + esc(titleOf(n)) + "</h2><p>" +
         T("This chapter will count as one of your trial chapters (" + (access.used.length + 1) + " of " + access.max + ").", "هالفصل رح ينحسب من فصول تجربتك (" + (access.used.length + 1) + " من " + access.max + ").") +
-        (left === 1 ? "<br>" + T("After it, other chapters need a subscription.", "بعده، باقي الفصول بتحتاج اشتراك.") : "") + "</p>" +
+        (left === 1 ? "<br>" + T("After it, other chapters need a subscription.", "بعده، باقي الفصول بتحتاج اشتراك.") : "") +
+        "<br><small class='muted'>" + T("Keep this page open: closing it ends the trial.", "خلّي هالصفحة مفتوحة: إذا سكّرتها بتنتهي التجربة.") + "</small></p>" +
         '<p class="row" style="justify-content:center"><button class="btn" id="yes">' + T("Open it", "افتحه") + '</button><button class="btn ghost" id="no">' + T("Choose another", "اختار غيره") + "</button></p>");
       $("yes").onclick = () => res(true); $("no").onclick = () => res(false);
     });
@@ -181,7 +196,7 @@
     const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
     const old = frame.src; frame.src = url; frame.hidden = false; state.hidden = true;
     if (old && old.startsWith("blob:")) setTimeout(() => URL.revokeObjectURL(old), 4000);
-    cur = n;
+    cur = n; paintTrial();
     try { localStorage.setItem("lib-last:" + slug, JSON.stringify({ ch: n })); localStorage.setItem("ffs1:lang", JSON.stringify(lang)); } catch (e) {}
     history.replaceState(null, "", "?b=" + encodeURIComponent(slug) + "&ch=" + n);
   }
@@ -203,9 +218,8 @@
   let want = +q.get("ch") || 0;
   if (!want) { try { want = (JSON.parse(localStorage.getItem("lib-last:" + slug)) || {}).ch || 0; } catch (e) {} }
   if (isTrial()) {
-    if (access.ends_at && new Date(access.ends_at) < new Date()) return paywall("trial_ended");
-    if (want && (access.used.includes(want) || isFree(want))) return open(want);
-    if (access.used.length) return chooser();
+    if (access.ended) return paywall("trial_ended");
+    if (want && access.used.includes(want)) return open(want);
     return chooser();
   }
   open(want || (book.chapters || [1])[0]);
